@@ -14,7 +14,6 @@ module.exports = {
     }
     ,
 
-
     Extractor : function () {
         var fs = require("fs");
         var csv2JsonConverter = require("csvtojson").Converter;
@@ -24,7 +23,7 @@ module.exports = {
         var path = require('path');
         var mysql = require('mysql');
         var mongoClient = require('mongodb').MongoClient;
-        var express = require('express');
+        //var express = require('express');
         
         
         
@@ -67,15 +66,17 @@ module.exports = {
             for (var key in json) {
                 value = json[key];
                 var nodeStringNew = nodeString + '.' + key;
-                var nodeID = uuid.v4();     //tmp
-                if (typeof value == 'object' && value !== null) {
+                //var nodeID = (uuid.v4()).replace('-', '');     //tmp
+                var nodeID = new Buffer(16);
+                uuid.v4(null, nodeID, 0);
+                if (typeof value == 'object' /*&& value !== null*/) {
                     // json object
                     nodeOperationCallback(key, value, nodeStringNew, nodeID, parentID, false);
                     jsonKeyValuePairParser(json[key], nodeStringNew, nodeOperationCallback, nodeID);
 
                 } else {
                     // leaf node
-                    
+                    //console.log('***', typeof value);
                     nodeOperationCallback(key, value, nodeStringNew, nodeID, parentID, true);
                     
                 }
@@ -87,7 +88,6 @@ module.exports = {
         this.extractJsonFromFile = extractJsonFromFile;
         this.jsonKeyValuePairParser = jsonKeyValuePairParser;
         
-        
         // TODO: 
         // * add file
         // * add file batch
@@ -95,22 +95,83 @@ module.exports = {
         // * delete file batch
         
         this.addFile = function(filename) {
-            // var connection = mysql.createConnection({
-            //     host     : 'localhost',
-            //     user     : 'me',
-            //     password : 'secret',
-            //     database : 'my_db'
-            // });
+            var connection = mysql.createConnection({
+                host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+                user     : 'shrekshao',
+                password : '12345678',
+                database : 'datalake550'
+            });
             
             // var app = express();
             
-            // connection.connect(function(err) {
-            //     if(!err) {
-            //         console.log("Database is connected ... nn");    
-            //     } else {
-            //         console.log("Error connecting database ... nn");    
-            //     }
-            // });
+            connection.connect(function(err) {
+                if(!err) {
+                    console.log("Database is connected ... nn");  
+                    
+                    extractJsonFromFile(filename, function(json, rootString) {
+                        jsonKeyValuePairParser(json, rootString, function(key, value, nodeString, nodeID, parentID, isLeaf) {
+                            var vertex;
+                            if ( !isLeaf ) {
+                                // insert this node as a record to MySQL
+                                
+                                vertex = {
+                                    'node_id': nodeID
+                                    ,'value': nodeString
+                                    ,'is_leaf': false
+                                    //,'file_id': filename
+                                    ,'file_id': 'test_file'
+                                };
+                                
+                            } else {
+                                // insert this node as a record to MySQL
+                                
+                                vertex = {
+                                    'node_id': nodeID
+                                    ,'value': value
+                                    ,'is_leaf': true
+                                    //,'file_id': filename
+                                    ,'file_id': 'test_file'
+                                };
+                                
+                                //console.log('leaf: ', key, ': ', vertex);
+                            }
+                            
+                            
+                            connection.query('INSERT INTO vertex SET ?', vertex, function(err, result){
+                                //TODO
+                                console.log('Inserting: ---log: ', vertex, err, result);
+                            });
+                            
+                            //insertSQL('vertex', vertex);
+                            
+                            
+                            // //TODO: should do after node insert
+                            // // or will fail foreign key test
+                            
+                            // // insert edge
+                            // if (typeof parentID !== 'undefined') {
+                            //     var edgeNodes = {'parent_id': parentID, 'child_id': nodeID};
+                            //     var insertQuery = 'INSERT INTO edge SET ?';
+                            //     //insertQuery = mysql.format(insertQuery, edgeNodes);
+                            //     connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
+                            //         //TODO
+                            //         console.log('Inserting: ---log: ', err, result);
+                            //     });
+                                
+                            //     //var edge = {'parent_id': parentID, 'child_id': nodeID};
+                                
+                            //     //insertSQL('edge', edge);
+                            // }
+                            
+                            // TODO: update
+                            // update inverted index on each insert? or timely updated
+                            
+                        });
+                    });  
+                } else {
+                    console.log("Error connecting database ... nn");    
+                }
+            });
             
             
             // //?
@@ -122,55 +183,11 @@ module.exports = {
             // });
             
             
-            extractJsonFromFile(filename, function(json, rootString) {
-                extractor.jsonKeyValuePairParser(json, rootString, function(key, value, nodeString, nodeID, parentID, isLeaf) {
-                    var vertex;
-                    if ( isLeaf ) {
-                        // insert this node as a record to MySQL
-                        
-                        vertex = {
-                            'node_id': nodeID
-                            ,'value': nodeString
-                            ,'is_leaf': false
-                            ,'file_id': filename   //? get file id?
-                        };
-                        
-                    } else {
-                        // insert this node as a record to MySQL
-                        
-                        vertex = {
-                            'node_id': nodeID
-                            ,'value': value
-                            ,'is_leaf': true
-                            ,'file_id': filename
-                        };
-                    }
-                    
-                    
-                    // connection.query('INSERT INTO vertex SET ?', vertex, function(err, result){
-                    //     //TODO
-                    // });
-                    insertSQL('vertex', vertex);
-                    
-                    // Tinsert edge
-                    if (typeof parentID !== 'undefined') {
-                        // var edgeNodes = [parentID, nodeID];
-                        // var insertQuery = 'INSERT INTO edge (node1,node2) VALUE (??,??);';
-                        // insertQuery = mysql.format(insertQuery, edgeNodes);
-                        // connection.query(insertQuery, function(err, result){
-                        //     //TODO
-                        // });
-                        
-                        var edge = {'parent_id': parentID, 'child_id': nodeID};
-                        insertSQL('edge', edge);
-                    }
-                    
-                    // TODO: update
-                    // update inverted index on each insert? or timely updated
-                    
-                });
-            });
             
+            
+            
+            
+        
             
         };
         
@@ -182,6 +199,10 @@ module.exports = {
             
             // TODO
         };
+        
+        
+        
+        
         
         
     }
