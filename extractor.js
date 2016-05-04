@@ -2,7 +2,49 @@ module.exports = {
 //var extractJsonFromFile = extractJsonFromFile || {};
 //var Extractor = Extractor || {};
 
-    
+    globalRootID : new Buffer(16),
+
+    initDatalake : function () {
+        var uuid = require('node-uuid');
+        // insert the global RootID to the vertex table
+        uuid.v4(null, module.exports.globalRootID, 0);
+
+        console.log(module.exports.globalRootID);
+        // TODO: store global root id in a file somewhere
+        
+        var id = module.exports.globalRootID;
+        // temp connection
+        // temp test
+        var mysql = require('mysql');
+        var connection = mysql.createConnection({
+            host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+            user     : 'shrekshao',
+            password : '12345678',
+            database : 'datalake550'
+        });
+        connection.connect(function(err) {
+            if(!err) {
+                var root = {
+                    'node_id': id
+                    ,'value': 'datalake-root'
+                    ,'is_leaf': false
+                    ,'file_id': 'root'
+                };
+                connection.query('INSERT INTO vertex SET ?', root, function(err, result){
+                    if(err) {
+                        throw err;
+                    }                    
+                });
+                
+                connection.end();
+            } else {
+                throw err;
+            }
+        });
+        
+        
+    }
+    ,
 
     insertSQL : function (table, row) {
         
@@ -81,9 +123,6 @@ module.exports = {
                 nodeOperationCallback(json, nodeString, nodeID, parentID, true);
             }
             
-
-  
-            
             
         };
         
@@ -98,7 +137,10 @@ module.exports = {
         // * delete file
         // * delete file batch
         
-        this.addFile = function(filename) {
+        this.addFile = function(filename, fileID) {
+            // fileID is a char(24) from mongodb
+            
+            // temp test
             var connection = mysql.createConnection({
                 host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
                 user     : 'shrekshao',
@@ -122,8 +164,7 @@ module.exports = {
                                     'node_id': nodeID
                                     ,'value': nodeString
                                     ,'is_leaf': false
-                                    //,'file_id': filename
-                                    ,'file_id': 'test_id'
+                                    ,'file_id': fileID
                                 };
                                 
                             } else {
@@ -133,8 +174,7 @@ module.exports = {
                                     'node_id': nodeID
                                     ,'value': value
                                     ,'is_leaf': true
-                                    //,'file_id': filename
-                                    ,'file_id': 'test_id'
+                                    ,'file_id': fileID
                                 };
                                 
                             }
@@ -174,10 +214,11 @@ module.exports = {
                             // TODO: update
                             // update inverted index on each insert? or timely updated
                             
-                        });
+                        }, module.exports.globalRootID);
                     });  
                 } else {
-                    console.log("Error connecting database ... nn");    
+                    throw err;
+                    //console.log("Error connecting database ... nn");    
                 }
             });
             
