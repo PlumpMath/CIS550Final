@@ -132,7 +132,7 @@ module.exports = {
                             'node_id': nodeID
                             ,'value': nodeString
                             ,'is_leaf': false
-                            ,'file': filename   //? get file id?
+                            ,'file_id': filename   //? get file id?
                         };
                         
                     } else {
@@ -142,7 +142,7 @@ module.exports = {
                             'node_id': nodeID
                             ,'value': value
                             ,'is_leaf': true
-                            ,'file': filename
+                            ,'file_id': filename
                         };
                     }
                     
@@ -161,7 +161,7 @@ module.exports = {
                         //     //TODO
                         // });
                         
-                        var edge = {'parent_id': parentID, 'node_id': nodeID};
+                        var edge = {'parent_id': parentID, 'child_id': nodeID};
                         insertSQL('edge', edge);
                     }
                     
