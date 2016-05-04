@@ -63,24 +63,28 @@ module.exports = {
             //console.log(json);
             var value;
             
-            for (var key in json) {
-                value = json[key];
-                var nodeStringNew = nodeString + '/' + key;
-                //var nodeID = (uuid.v4()).replace('-', '');     //tmp
-                var nodeID = new Buffer(16);
-                uuid.v4(null, nodeID, 0);
-                if (typeof value == 'object' /*&& value !== null*/) {
-                    // json object
-                    nodeOperationCallback(key, value, nodeStringNew, nodeID, parentID, false);
+            var nodeID = new Buffer(16);
+            uuid.v4(null, nodeID, 0);
+            
+            if (typeof json == 'object') {
+                // json object
+                nodeOperationCallback(json, nodeString, nodeID, parentID, false);
+                for (var key in json) {
+                    value = json[key];
+                    var nodeStringNew = nodeString + '/' + key;
+
                     jsonKeyValuePairParser(json[key], nodeStringNew, nodeOperationCallback, nodeID);
 
-                } else {
-                    // leaf node
-                    //console.log('***', typeof value);
-                    nodeOperationCallback(key, value, nodeStringNew, nodeID, parentID, true);
-                    
                 }
+            } else {
+                // leaf node
+                nodeOperationCallback(json, nodeString, nodeID, parentID, true);
             }
+            
+
+  
+            
+            
         };
         
         
@@ -109,7 +113,7 @@ module.exports = {
                     console.log("Database is connected ... nn");  
                     
                     extractJsonFromFile(filename, function(json, rootString) {
-                        jsonKeyValuePairParser(json, rootString, function(key, value, nodeString, nodeID, parentID, isLeaf) {
+                        jsonKeyValuePairParser(json, rootString, function(value, nodeString, nodeID, parentID, isLeaf) {
                             var vertex;
                             if ( !isLeaf ) {
                                 // insert this node as a record to MySQL
@@ -133,7 +137,6 @@ module.exports = {
                                     ,'file_id': 'test_id'
                                 };
                                 
-                                //console.log('leaf: ', key, ': ', vertex);
                             }
                             
                             
