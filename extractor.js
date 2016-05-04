@@ -65,7 +65,7 @@ module.exports = {
             
             for (var key in json) {
                 value = json[key];
-                var nodeStringNew = nodeString + '.' + key;
+                var nodeStringNew = nodeString + '/' + key;
                 //var nodeID = (uuid.v4()).replace('-', '');     //tmp
                 var nodeID = new Buffer(16);
                 uuid.v4(null, nodeID, 0);
@@ -119,7 +119,7 @@ module.exports = {
                                     ,'value': nodeString
                                     ,'is_leaf': false
                                     //,'file_id': filename
-                                    ,'file_id': 'test_file'
+                                    ,'file_id': 'test_id'
                                 };
                                 
                             } else {
@@ -130,7 +130,7 @@ module.exports = {
                                     ,'value': value
                                     ,'is_leaf': true
                                     //,'file_id': filename
-                                    ,'file_id': 'test_file'
+                                    ,'file_id': 'test_id'
                                 };
                                 
                                 //console.log('leaf: ', key, ': ', vertex);
@@ -139,29 +139,34 @@ module.exports = {
                             
                             connection.query('INSERT INTO vertex SET ?', vertex, function(err, result){
                                 //TODO
-                                console.log('Inserting: ---log: ', vertex, err, result);
+                                if(err !== null) {
+                                    console.log('Inserting: ---log: ', vertex, err, result);
+                                } else {
+                                    
+                                    // insert edge
+                                    if (typeof parentID !== 'undefined') {
+                                        var edgeNodes = {'parent_id': parentID, 'child_id': nodeID};
+                                        //insertQuery = mysql.format(insertQuery, edgeNodes);
+                                        connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
+                                            //TODO
+                                            if(err !== null) {
+                                                console.log('Inserting: ---log: ', edgeNodes, err, result);
+                                            } 
+                                        });
+                                        
+                                        //var edge = {'parent_id': parentID, 'child_id': nodeID};
+                                        
+                                        //insertSQL('edge', edge);
+                                    }
+                                }
+                                
                             });
                             
                             //insertSQL('vertex', vertex);
                             
+                            //connection.end();
                             
-                            // //TODO: should do after node insert
-                            // // or will fail foreign key test
                             
-                            // // insert edge
-                            // if (typeof parentID !== 'undefined') {
-                            //     var edgeNodes = {'parent_id': parentID, 'child_id': nodeID};
-                            //     var insertQuery = 'INSERT INTO edge SET ?';
-                            //     //insertQuery = mysql.format(insertQuery, edgeNodes);
-                            //     connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
-                            //         //TODO
-                            //         console.log('Inserting: ---log: ', err, result);
-                            //     });
-                                
-                            //     //var edge = {'parent_id': parentID, 'child_id': nodeID};
-                                
-                            //     //insertSQL('edge', edge);
-                            // }
                             
                             // TODO: update
                             // update inverted index on each insert? or timely updated
