@@ -4,7 +4,18 @@ module.exports = {
 
     globalRootID : new Buffer(16),
 
-    initDatalake : function () {
+
+    readGlobalRootID : function (globalRootIDFilename) {
+        var fs = require('fs');
+        fs.readFile(globalRootIDFilename, function(err, data) {
+            if(!err) {
+                module.exports.globalRootID = data;
+                console.log(module.exports.globalRootID);
+            }
+        });
+    },
+
+    initDatalake : function (globalRootIDFilename) {
         var uuid = require('node-uuid');
         // insert the global RootID to the vertex table
         uuid.v4(null, module.exports.globalRootID, 0);
@@ -12,7 +23,12 @@ module.exports = {
         console.log(module.exports.globalRootID);
         // TODO: store global root id in a file somewhere
         
-        var id = module.exports.globalRootID;
+        var fs = require('fs');
+        fs.writeFile(globalRootIDFilename, module.exports.globalRootID);
+        
+        
+        // // var id = module.exports.globalRootID;
+        
         // temp connection
         // temp test
         var mysql = require('mysql');
@@ -25,7 +41,7 @@ module.exports = {
         connection.connect(function(err) {
             if(!err) {
                 var root = {
-                    'node_id': id
+                    'node_id': module.exports.globalRootID
                     ,'value': 'datalake-root'
                     ,'is_leaf': false
                     ,'file_id': 'root'
@@ -41,7 +57,6 @@ module.exports = {
                 throw err;
             }
         });
-        
         
     }
     ,
