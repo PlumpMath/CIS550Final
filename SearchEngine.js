@@ -51,7 +51,7 @@ module.exports = {
 		function SearchOneKey(root)
 		{
 
-			var sql = "select parent_id, value from test2 where node_id = ?";
+			var sql = "select parent_id, value from vertex where node_id = ?";
 			connection.query(sql, [root], 
 				function(err, rows, fields) {
 					if(err) throw err;
