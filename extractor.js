@@ -2,12 +2,13 @@ module.exports = {
 //var extractJsonFromFile = extractJsonFromFile || {};
 //var Extractor = Extractor || {};
 
-    globalRootID : new Buffer(16),
+    //globalRootID : new Buffer(16),
+    globalRootID : '',
 
 
     readGlobalRootID : function (globalRootIDFilename) {
         var fs = require('fs');
-        fs.readFile(globalRootIDFilename, function(err, data) {
+        fs.readFile(globalRootIDFilename, 'utf-8', function(err, data) {
             if(!err) {
                 module.exports.globalRootID = data;
                 console.log(module.exports.globalRootID);
@@ -18,7 +19,11 @@ module.exports = {
     initDatalake : function (globalRootIDFilename) {
         var uuid = require('node-uuid');
         // insert the global RootID to the vertex table
-        uuid.v4(null, module.exports.globalRootID, 0);
+        //uuid.v4(null, module.exports.globalRootID, 0);
+        
+        module.exports.globalRootID = uuid.v4();
+        //console.log(module.exports.globalRootID);
+        module.exports.globalRootID = module.exports.globalRootID.replace(/-/g,'');
 
         console.log(module.exports.globalRootID);
         // TODO: store global root id in a file somewhere
@@ -122,16 +127,17 @@ module.exports = {
             //console.log(json);
             var value;
             
-            var nodeID = new Buffer(16);
-            uuid.v4(null, nodeID, 0);
-            //var nodeID = (uuid.v4()).replace('-','');
+            //var nodeID = new Buffer(16);
+            //uuid.v4(null, nodeID, 0);
+            var nodeID = (uuid.v4()).replace(/-/g,'');;
             
             if (typeof json == 'object') {
                 // json object
                 nodeOperationCallback(json, nodeString, nodeID, parentID, false);
                 for (var key in json) {
                     value = json[key];
-                    var nodeStringNew = nodeString + '/' + key;
+                    //var nodeStringNew = nodeString + '/' + key;
+                    var nodeStringNew = key;
 
                     jsonKeyValuePairParser(json[key], nodeStringNew, nodeOperationCallback, nodeID);
 
