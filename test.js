@@ -33,7 +33,7 @@
     extractorModule.readGlobalRootID('globalRootID');
     
     //console.log(extractorModule.globalRootID);
-    //extractor.addFile('./test-data/de.1.clubs.json', 'file-1');
-    //extractor.addFile('./test-data/1-bundesliga.csv', 'file-2');
+    extractor.addFile('./test-data/de.1.clubs.json', 'file-1');
+    extractor.addFile('./test-data/1-bundesliga.csv', 'file-2');
     
 })();

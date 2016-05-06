@@ -38,10 +38,12 @@ module.exports = {
             password : '12345678',
             database : 'datalake550'
         });
+        
         connection.connect(function(err) {
             if(!err) {
                 var root = {
                     'node_id': module.exports.globalRootID
+                    ,'parent_id': null
                     ,'value': 'datalake-root'
                     ,'is_leaf': false
                     ,'file_id': 'root'
@@ -61,15 +63,15 @@ module.exports = {
     }
     ,
 
-    insertSQL : function (table, row) {
+    // insertSQL : function (table, row) {
         
-    }
-    ,
+    // }
+    // ,
 
-    deleteSQL : function (table, row) {
+    // deleteSQL : function (table, row) {
         
-    }
-    ,
+    // }
+    // ,
 
     Extractor : function () {
         var fs = require("fs");
@@ -178,6 +180,7 @@ module.exports = {
                                 
                                 vertex = {
                                     'node_id': nodeID
+                                    ,'parent_id': parentID
                                     ,'value': nodeString
                                     ,'is_leaf': false
                                     ,'file_id': fileID
@@ -188,6 +191,7 @@ module.exports = {
                                 
                                 vertex = {
                                     'node_id': nodeID
+                                    ,'parent_id': parentID
                                     ,'value': value
                                     ,'is_leaf': true
                                     ,'file_id': fileID
@@ -202,21 +206,21 @@ module.exports = {
                                     console.log('Inserting: ---log: ', vertex, err, result);
                                 } else {
                                     
-                                    // insert edge
-                                    if (typeof parentID !== 'undefined') {
-                                        var edgeNodes = {'parent_id': parentID, 'child_id': nodeID};
-                                        //insertQuery = mysql.format(insertQuery, edgeNodes);
-                                        connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
-                                            //TODO
-                                            if(err !== null) {
-                                                console.log('Inserting: ---log: ', edgeNodes, err, result);
-                                            } 
-                                        });
+                                    // // insert edge
+                                    // if (typeof parentID !== 'undefined') {
+                                    //     var edgeNodes = {'parent_id': parentID, 'child_id': nodeID};
+                                    //     //insertQuery = mysql.format(insertQuery, edgeNodes);
+                                    //     connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
+                                    //         //TODO
+                                    //         if(err !== null) {
+                                    //             console.log('Inserting: ---log: ', edgeNodes, err, result);
+                                    //         } 
+                                    //     });
                                         
-                                        //var edge = {'parent_id': parentID, 'child_id': nodeID};
+                                    //     //var edge = {'parent_id': parentID, 'child_id': nodeID};
                                         
-                                        //insertSQL('edge', edge);
-                                    }
+                                    //     //insertSQL('edge', edge);
+                                    // }
                                 }
                                 
                             });
@@ -225,10 +229,10 @@ module.exports = {
                             
                             //connection.end();
                             
-                            
-                            
+
                             // TODO: update
                             // update inverted index on each insert? or timely updated
+                            
                             
                         }, module.exports.globalRootID);
                     });  
@@ -247,12 +251,6 @@ module.exports = {
             //     //connection.end();
             // });
             
-            
-            
-            
-            
-            
-        
             
         };
         
