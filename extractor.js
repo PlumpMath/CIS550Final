@@ -122,6 +122,7 @@ module.exports = {
             
             var nodeID = new Buffer(16);
             uuid.v4(null, nodeID, 0);
+            //var nodeID = (uuid.v4()).replace('-','');
             
             if (typeof json == 'object') {
                 // json object
