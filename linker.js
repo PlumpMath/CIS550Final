@@ -56,6 +56,18 @@ module.exports = {
         function searchQuery(wordsArray, callback) {
             
             // TODO: get a list of node for each of the key word
+            var n = wordsArray.length;
+            var cur = 0;
+            
+            var nodeIDs = [];
+            
+            function checkFinish(result) {
+                cur += 1;
+                nodeIDs.push(result);
+                if(cur >= n) {
+                    callback(nodeIDs);
+                }
+            }
             
             for(word in wordsArray) {
                 // get the node json array 
@@ -64,7 +76,7 @@ module.exports = {
                 //     // Send it to Route finder
                 // });
                 
-                getNodeArrayByKeyword(word, callback);
+                getNodeArrayByKeyword(wordsArray[word], checkFinish);
             }
             
         }
