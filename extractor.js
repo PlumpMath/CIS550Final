@@ -88,9 +88,7 @@ module.exports = {
         var mysql = require('mysql');
         var mongoClient = require('mongodb').MongoClient;
         //var express = require('express');
-        
-        
-        
+         
         
         var extractJsonFromFile = function (filename, onload) {
             var formatName = path.extname(filename);
@@ -262,11 +260,80 @@ module.exports = {
         
         
         
-        this.deleteFile = function (filename) {
+        this.deleteFile = function (filename, file_id) {
             // Select from vertex where file = filename (id?)
             // and delete these records
             
             // TODO
+            
+            // temp test
+            var connection = mysql.createConnection({
+                host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+                user     : 'shrekshao',
+                password : '12345678',
+                database : 'datalake550'
+            });
+            
+            
+            connection.connect(function(err) {
+                if(!err) {
+                    console.log("Database is connected ... nn");  
+                    
+                    
+                    /*
+                    SELECT * FROM vertex WHERE 
+                     */
+                    
+                    var vertices = {file_id : file_id};
+                    connection.query('SELECT * FROM vertex WHERE ?', vertices, function(err, rows, fields) {
+                        if (err) {
+                            throw err;
+                        }
+                        
+                        var deleteEdgeSQL = '';
+                        
+                        var deleteVertexSQL = '';
+                        
+                        for (i in rows) {
+                            
+                            // 1. delete related edge (might fail because foreign key?)
+                            
+                            // 2. update inverted index in mongodb
+                            
+                            // 3. delete itself
+                            
+                            // TODO: build each SQL
+                            // append a series of OR nodeID=xxx
+                            
+                            
+                            
+                            // var deleteEdgeSQL = 'DELETE FROM vertex WHERE node_id_2=' + connection.escape();
+                            // connection.query(deleteEdgeSQL, function(err, res) {
+                            //     if(err) throw err;
+                                
+                            //     conncection
+                            // });
+                        }
+                        
+                        connection.query(deleteEdgeSQL, function(err, result) {
+                            if(err) throw err;
+                            
+                            connection.query(deleteVertexSQL, function(err, result){
+                                if(err) throw err;
+                                
+                                connection.end();
+                            });
+                            
+                        })
+                    });
+                    
+                    
+                } else {
+                    throw err;
+                    //console.log("Error connecting database ... nn");    
+                }
+            });
+            
         };
         
         
