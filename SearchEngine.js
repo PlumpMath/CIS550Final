@@ -2,16 +2,9 @@ module.exports = {
 
 	SearchEngine : function()
 	{
-		var mysql 		= require('mysql');
-
-		var connection  = mysql.createConnection({
-		    host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-		    user     : 'shrekshao',
-		    password : '12345678',
-		    database : 'datalake550'
-		});
-
-		connection.connect();
+		//connections
+		var mysql;
+		var connection;
 
 		var finishedKeys;
 		var numberOfKeys;
@@ -25,10 +18,32 @@ module.exports = {
 		var nearestCommonParentID; 
 
 		var callback;
+		var totalEdgeNumber;
 
+		this.SearchKeys = SearchKeys;
+		this.Init = Init;
 
-		this.Search = SearchKeys;
-		this.EndConnection = EndConnection;
+		//this.EndConnection = EndConnection;
+		//this.StartConnection = StartConnection;
+
+		function StartConnection()
+		{
+			mysql 		= require('mysql');
+
+			connection  = mysql.createConnection({
+			    host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+			    user     : 'shrekshao',
+			    password : '12345678',
+			    database : 'datalake550'
+			});
+
+			connection.connect();
+		}
+
+		function Init(_connection)
+		{
+			connection = _connection;
+		}
 
 		function SearchKeys(_keys, cb)
 		{
@@ -40,7 +55,10 @@ module.exports = {
 			//containedKeysMap = new Map();
 			nearestCommonParentID = -1;
 
-			callback = cb;
+			if(cb != undefined)
+				callback = cb;
+
+			totalEdgeNumber = 0;
 
 			for(var i=0;i<keys.length;i++)
 			{
@@ -89,18 +107,18 @@ module.exports = {
 							var newSet = new Set();
 							newSet.add(root);
 							connectMap.set(rows[0].parent_id, newSet);
+							totalEdgeNumber ++ ;
 						}
 						else
 						{
 							var nodeSet = connectMap.get(rows[0].parent_id);
-							nodeSet.add(root);
-							connectMap.set(rows[0].parent_id,nodeSet);
+							if(nodeSet.has(root) == false)
+							{
+								totalEdgeNumber++;
+								nodeSet.add(root);
+								connectMap.set(rows[0].parent_id,nodeSet);
+							}
 						}
-
-						// if(nearestCommonParentID == -1 && containedKeysMap.get(rows[0].parent_id) == numberOfKeys)
-						// {
-						// 	nearestCommonParentID = rows[0].parent_id;
-						// }
 
 						SearchOneKey(rows[0].parent_id);
 
@@ -130,13 +148,15 @@ module.exports = {
 			// }, connectMap);
 
 			FindNearestCommonParentID(treeRootID);
+			GetEdgeNumber();
 
 			var searchResult = 
 				{
 				connectMap : connectMap,
 				tagMap : tagMap,
 				nearestCommonParentID : nearestCommonParentID,
-				treeRootID : treeRootID
+				treeRootID : treeRootID,
+				totalEdgeNumber : totalEdgeNumber
 				};
 
 			callback(searchResult);
@@ -175,9 +195,130 @@ module.exports = {
 			return result;
 		}
 
+		function GetEdgeNumber()
+		{
+			var ncpToRoot = 0;
+			var tempNodeID = treeRootID;
+			while(tempNodeID != nearestCommonParentID)
+			{
+				ncpToRoot ++;
+				//console.log(tempNodeID);
+				tempNodeID = connectMap.get(tempNodeID).values().next().value;
+			}
+			totalEdgeNumber = totalEdgeNumber - ncpToRoot;
+		}
+
 		function EndConnection()
 		{
 			connection.end();
 		}
+	},
+
+
+	Search : function()
+	{
+		//connections
+		var mysql;
+		var connection;
+
+		//
+		this.StartConnection = StartConnection;
+		this.EndConnection = EndConnection;
+		this.SearchQuery = SearchQuery;
+
+		function StartConnection()
+		{
+			mysql 		= require('mysql');
+
+			connection  = mysql.createConnection({
+			    host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+			    user     : 'shrekshao',
+			    password : '12345678',
+			    database : 'datalake550'
+			});
+
+			connection.connect();
+		}
+
+		function EndConnection()
+		{
+			connection.end();
+		}
+
+		function PrintSearchResult(result_keys)
+		{
+			console.log("-------------------------------------------------");
+			result_keys.connectMap.forEach(function(value, key) {
+
+
+            process.stdout.write(key + " : = " + result_keys.tagMap.get(key) + "\n");
+            value.forEach(function(value) {
+                // var buff = new Buffer(value,'binary');
+                // process.stdout.write("---->" + buff.toString('hex') + "\n");
+                process.stdout.write("---->" + value + " : = " + result_keys.tagMap.get(value) + "\n");
+            });
+        	}, result_keys);
+
+       		process.stdout.write("nearest common parent ID: " + result_keys.nearestCommonParentID +"\n");
+        	process.stdout.write("tree root node ID: " + result_keys.treeRootID +"\n");
+			process.stdout.write("total edge number: " + result_keys.totalEdgeNumber +"\n");
+		}
+
+		function SearchQuery(result,cb)
+		{
+			var rankedResult = new Array();
+
+			if(result.length == 1)
+			{
+				for(var i=0;i<result[0].length;i++)
+				{
+					//console.log	("single search");
+					var searchEngine = new module.exports.SearchEngine();
+					searchEngine.Init(connection);
+
+					searchEngine.SearchKeys([result[0][i]["node_id"]], function(result_keys){
+
+						PrintSearchResult(result_keys);
+
+						rankedResult.push(result_keys);
+						if(rankedResult.length == result[0].length)
+						{
+							rankedResult.sort(function(a,b){
+									return a.totalEdgeNumber - b.totalEdgeNumber;
+							});
+							cb(rankedResult);
+						}
+
+					});
+				}
+			}
+			else if(result.length == 2)
+			{
+				for(var i=0;i<result[0].length;i++)
+					for(var j=0;j<result[1].length;j++)
+					{
+						//console.log("double search");
+						var searchEngine = new module.exports.SearchEngine();
+						searchEngine.Init(connection);
+
+						searchEngine.SearchKeys([result[0][i]["node_id"],result[1][j]["node_id"]], function(result_keys){
+
+							PrintSearchResult(result_keys);
+
+							rankedResult.push(result_keys);
+							if(rankedResult.length == result[0].length * result[1].length)
+							{
+								rankedResult.sort(function(a,b){
+									return a.totalEdgeNumber - b.totalEdgeNumber;
+								});
+								cb(rankedResult);
+							}
+
+						});
+					}
+			}
+		}
+
+
 	}
 };
