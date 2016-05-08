@@ -29,17 +29,17 @@
     
     // ---------------- insert data test--------------------------
     
-    //extractorModule.initDatalake('globalRootID');
+    extractorModule.initDatalake('globalRootID');
     
     //extractorModule.readGlobalRootID('globalRootID');
     
     //console.log(extractorModule.globalRootID);
-    //extractor.addFile('./test-data/de.1.clubs.json', 'file-1');
+    extractor.addFile('./test-data/de.1.clubs.json', 'file-1');
     //extractor.addFile('./test-data/1-bundesliga.csv', 'file-2');
     
     //--------------------------------------------------------------
     
-    
+    /*
     //-------------- search test ---------------------------
     var linkerModule = require('./linker.js');
     var linker = new linkerModule.Linker();
@@ -81,7 +81,7 @@
             searchEngine.EndConnection();
         });
     });
-
+    */
     
     
     
