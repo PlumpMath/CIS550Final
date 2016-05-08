@@ -2,6 +2,8 @@ const AWS = require('aws-sdk');
 const bluebird = require('bluebird');
 const envvar = require('envvar');
 const express = require('express');
+const fs = require('fs');
+const join = require('path').join;
 const mongoose = require('mongoose');
 const Sequelize = require('sequelize');
 
@@ -10,27 +12,29 @@ const AWS_ACCESS_KEY_ID = envvar.string('AWS_ACCESS_KEY_ID');
 const AWS_SECRET_ACCESS_KEY = envvar.string('AWS_SECRET_ACCESS_KEY');
 const MONGO_URL = envvar.string('MONGO_URL');
 const MYSQL_HOST = envvar.string('MYSQL_HOST');
+const MYSQL_DB = envvar.string('MYSQL_DB');
 const MYSQL_USER = envvar.string('MYSQL_USER');
 const MYSQL_PASSWORD = envvar.string('MYSQL_PASSWORD');
 
+const models = join(__dirname, 'app/models');
 const app = express();
 app.set('view-engine', 'pug');
+
+module.exports = app;
+
+fs.readdirSync(models)
+  .filter(file => ~file.search(/^[^\.].*\.js$/))
+  .forEach(file => require(join(models, file)));
 
 mongoose.connect(MONGO_URL);
 
 const mongodb = mongoose.connection;
 
-console.log(MYSQL_HOST);
-
-const sequelize = new Sequelize(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, {
-	dialectOptions: {
-    	socketPath: '/Applications/MAMP/tmp/mysql/mysql.sock'
-  	}
+const sequelize = new Sequelize(MYSQL_DB, MYSQL_USER, MYSQL_PASSWORD, {
+	host: MYSQL_HOST
 });
 
-const File = mongoose.model('File', {
-	url: String
-});
+
 
 const Vertex = sequelize.define('Vertex', {
 	vertex_id: {
@@ -53,7 +57,9 @@ mongodb.once('open', () => {
 app.get('/')
 
 sequelize.sync().then(() => {
-	console.log("here");
+  app.listen(APP_PORT, () => {
+    console.log('CIS550 Final Project started on port', APP_PORT);
+  })
 }, (err) => {
 	console.log(err);
 })
