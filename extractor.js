@@ -292,7 +292,9 @@ module.exports = {
                             
                             
                             // insert edge connecting nodes sharing the same keyword
-                            mongoClient.connect('mongodb://localhost:27017', function(err, db) {
+                            mongoClient.connect('mongodb://localhost:27017/datalake', function(err, db) {
+                                if(err) throw err;
+                                
                                 findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
                                     for (i in nodeIDs) {
                                         //var edge = ;
