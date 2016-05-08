@@ -300,16 +300,16 @@ module.exports = {
                                     
                                     findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
                                         
-                                        for (i in nodeIDs) {
-                                            //var edge = ;
+                                        // for (i in nodeIDs) {
+                                        //     //var edge = ;
                                             
-                                            connection.query('INSERT INTO edge SET ?', 
-                                            {'node_id_1': nodeID, 'node_id_2': nodeIDs[i]},
-                                            function(err, result){
-                                                //TODO
-                                                if(err) throw err;
-                                            });
-                                        }
+                                        //     connection.query('INSERT INTO edge SET ?', 
+                                        //     {'node_id_1': nodeID, 'node_id_2': nodeIDs[i]},
+                                        //     function(err, result){
+                                        //         //TODO
+                                        //         if(err) throw err;
+                                        //     });
+                                        // }
                                         
                                         updateInvertedIndex(db, isLeaf, function(){});
                                     });
