@@ -217,9 +217,9 @@ module.exports = {
                             
                             // update Inverted Index
                             function updateInvertedIndex(db, leaf, callback) {
-                                if(!leaf) {
-                                    callback();
-                                } else {
+                                // if(!leaf) {
+                                //     callback();
+                                // } else {
                                     db.collection('inverted_index').update(
                                         {'_id' : value},
                                         {$push : {'node_ids': nodeID}},
@@ -231,25 +231,28 @@ module.exports = {
                                             callback();
                                         }
                                     );
-                                }
+                                // }
                                 
-                            };
+                            }
                             
                             // use keyword find all nodeID
                             function findNodeIDWithKeyword(db, leaf, callback) {
-                                if(!leaf) {
-                                    callback();
-                                } else {
+                                // if(!leaf) {
+                                //     callback();
+                                // } else {
                                     var cursor = db.collection('inverted_index').find(
                                         {'keyword' : value}
                                     );
                                     
                                     cursor.each(function(err, doc){
+                                        if(err) throw err;
                                         
                                         if( doc!=null ) {
                                             // for each in this array
                                             // TODO : connect each nodeID in the list with this nodeID
                                             // insert to edge table
+                                            console.log(doc);
+                                            
                                             for(i in doc) {
                                                 connection.query('INSERT INTO edge SET ?', 
                                                 {'node_id_1': nodeID, 'node_id_2': doc[i]},
@@ -261,9 +264,9 @@ module.exports = {
                                         }
                                         
                                         
-                                        callback(/* somthing */);
+                                        callback(doc);
                                     });
-                                }
+                                // }
                             }
                             
                             
@@ -285,31 +288,35 @@ module.exports = {
                                         
                                     }
                                     
-                                    
                                 }
                                 
                             });
                             
                             
-                            // insert edge connecting nodes sharing the same keyword
-                            mongoClient.connect('mongodb://localhost:27017/datalake', function(err, db) {
-                                if(err) throw err;
-                                
-                                findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
-                                    for (i in nodeIDs) {
-                                        //var edge = ;
+                            if(isLeaf) {
+                                // insert edge connecting nodes sharing the same keyword
+                                mongoClient.connect('mongodb://localhost:27017/datalake', function(err, db) {
+                                    if(err) throw err;
+                                    
+                                    findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
                                         
-                                        connection.query('INSERT INTO edge SET ?', 
-                                        {'node_id_1': nodeID, 'node_id_2': nodeIDs[i]},
-                                        function(err, result){
-                                            //TODO
-                                            if(err) throw err;
-                                        });
-                                    }
+                                        for (i in nodeIDs) {
+                                            //var edge = ;
+                                            
+                                            connection.query('INSERT INTO edge SET ?', 
+                                            {'node_id_1': nodeID, 'node_id_2': nodeIDs[i]},
+                                            function(err, result){
+                                                //TODO
+                                                if(err) throw err;
+                                            });
+                                        }
+                                        
+                                        updateInvertedIndex(db, isLeaf, function(){});
+                                    });
+                                    
                                 });
-                                
-                                updateInvertedIndex(db, isLeaf, function(){});
-                            });
+                            }
+                            
                             
                             //insertSQL('vertex', vertex);
                             
