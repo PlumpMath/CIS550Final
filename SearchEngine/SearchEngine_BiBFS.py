@@ -37,9 +37,9 @@ class SearchEngine:
         self.nodeIDs_2 = {}
 
         self.db = MySQLdb.connect('datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-                             'shrekshao',
-                             '12345678',
-                             'datalake550')
+                                  'shrekshao',
+                                  '12345678',
+                                  'datalake550')
         self.cursor = self.db.cursor()
         # print "connect with database"
 
@@ -48,33 +48,32 @@ class SearchEngine:
         # print "close database connection"
 
     def GetExpansionList(self, root):
-        '''
+
         expansionList = set()
-        sql = "select node_id_1 from edge where node_id_2 = '%s'" % root
+        sql = "select node_id_1 from edge2 where node_id_2 = '%s'" % root
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
         for row in data:
             expansionList.add(row[0])
 
-        sql = "select node_id_2 from edge where node_id_1 = '%s'" % root
+        sql = "select node_id_2 from edge2 where node_id_1 = '%s'" % root
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
         for row in data:
             expansionList.add(row[0])
 
         return expansionList
-        '''
 
-        return self.connectMap[root]
+        # return self.connectMap[root]
 
     def GetNodeValue(self, nodeID):
-        sql = "select value from vertex where node_id = %s" % nodeID
+        sql = "select value from vertex2 where node_id = '%s'" % nodeID
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
         if len(data) == 1:
             return data[0][0]
         else:
-            return "**undefined**"
+            return self.valueMap[nodeID]
 
 
     def PrintPathInfo(self, p):
@@ -92,6 +91,9 @@ class SearchEngine:
             self.nodeIDs_1 = nodeIDs_2
             self.nodeIDs_2 = nodeIDs_1
 
+        # return self.SearchStartFromNode('ff240a1cef4f40e3bcc1c5e85cd15657')
+
+        # '''
         resultPaths = []
         for startId in self.nodeIDs_1:
             result = self.SearchStartFromNode(startId)
@@ -103,6 +105,7 @@ class SearchEngine:
                 # print "not found", startId
 
         return resultPaths
+        # '''
 
 
     def CreateSearchNode(self, nodeId, nodeValue, prev):
@@ -118,7 +121,7 @@ class SearchEngine:
             hashNode.add(id)
 
         queue = list()
-        queue.append(self.CreateSearchNode(root, self.valueMap[root], -1))
+        queue.append(self.CreateSearchNode(root, self.GetNodeValue(root), -1))
 
         head = 0
 
@@ -127,14 +130,14 @@ class SearchEngine:
             for newID in expansionList:
                 if newID not in hashNode:
                     hashNode.add(newID)
-                    queue.append(self.CreateSearchNode(newID, self.valueMap[newID], head))
+                    queue.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head))
 
             if queue[head]["id"] in self.nodeIDs_2:
                 resultPath = []
                 tmp = head
 
                 while tmp != -1:
-                    resultPath.append(self.CreatePathNode(queue[tmp]["id"],queue[tmp]["value"]))
+                    resultPath.append(self.CreatePathNode(queue[tmp]["id"], queue[tmp]["value"]))
                     tmp = queue[tmp]["prev"]
 
                 resultPath.reverse()
