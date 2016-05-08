@@ -1,0 +1,11 @@
+html
+    head
+        title= title
+    body
+        h1= message
+        div
+            h2 Enter a URL to be Extracted
+            form(action='/file', method='post')
+                label(for='url') URL 
+                    input(id='url', type='text')
+                input(type='submit',value='Extract',data-transition='fade',data-theme='c')

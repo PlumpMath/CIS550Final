@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 const bluebird = require('bluebird');
+const bodyParser = require('body-parser');
 const envvar = require('envvar');
 const express = require('express');
 const fs = require('fs');
@@ -18,7 +19,11 @@ const MYSQL_PASSWORD = envvar.string('MYSQL_PASSWORD');
 
 const models = join(__dirname, 'app/models');
 const app = express();
-app.set('view-engine', 'pug');
+app.set('views', __dirname + '/views'); // general config
+app.set('view engine', 'pug');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({extended: true}));
+
 
 module.exports = app;
 
@@ -52,7 +57,13 @@ mongodb.once('open', () => {
 	console.log('Connected to', MONGO_URL);
 });
 
-app.get('/')
+app.get('/', (req, res) => {
+  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'})
+})
+
+app.post('/file', (req, res) => {
+  console.log(req.body);
+})
 
 sequelize.sync().then(() => {
   app.listen(APP_PORT, () => {
