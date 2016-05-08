@@ -93,8 +93,9 @@ class SearchEngine:
 
         # return self.SearchStartFromNode('ff240a1cef4f40e3bcc1c5e85cd15657')
 
-        # '''
+
         resultPaths = []
+        '''
         for startId in self.nodeIDs_1:
             result = self.SearchStartFromNode(startId)
             if result is not None:
@@ -105,7 +106,9 @@ class SearchEngine:
                 # print "not found", startId
 
         return resultPaths
-        # '''
+        '''
+        resultPaths = self.SearchStartFromMultipleNodes()
+        return resultPaths
 
 
     def CreateSearchNode(self, nodeId, nodeValue, prev):
@@ -146,3 +149,37 @@ class SearchEngine:
             head += 1
 
         return None
+
+    def SearchStartFromMultipleNodes(self):
+        resultPaths = []
+
+        hashNode = set()
+        queue = list()
+
+        for id in self.nodeIDs_1:
+            hashNode.add(id)
+            queue.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+
+        head = 0
+        while head < len(queue):
+            expansionList = self.GetExpansionList(queue[head]["id"])
+            for newID in expansionList:
+                if newID not in hashNode:
+                    hashNode.add(newID)
+                    queue.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head))
+
+            if queue[head]["id"] in self.nodeIDs_2:
+                resultPath = []
+                tmp = head
+
+                while tmp != -1:
+                    resultPath.append(self.CreatePathNode(queue[tmp]["id"], queue[tmp]["value"]))
+                    tmp = queue[tmp]["prev"]
+
+                resultPath.reverse()
+
+                resultPaths.append(resultPath)
+
+            head += 1
+
+        return resultPaths

@@ -39,5 +39,6 @@ linker.searchQuery(['Bayer Leverkusen','Hannover 96'], function(result) {
         nodelist.push(tmp);
     }
     //console.log(nodelist);
-    CallSearchExample([['fcb68966918b4bc2b58c68e4e9f364b9'],['d4a81e515163461c9085d730cf7e0a3a']]);
+    //CallSearchExample([['fcb68966918b4bc2b58c68e4e9f364b9'],['d4a81e515163461c9085d730cf7e0a3a']]);
+    CallSearchExample(nodelist);
 });
