@@ -221,7 +221,7 @@ module.exports = {
                                     callback();
                                 } else {
                                     db.collection('inverted_index').update(
-                                        {'keyword' : value},
+                                        {'_id' : value},
                                         {$push : {'node_ids': nodeID}},
                                         {upsert: true},
                                         function(err, object)
