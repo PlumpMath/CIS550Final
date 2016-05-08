@@ -45,7 +45,7 @@ const Vertex = sequelize.define('Vertex', {
   	file_id: Sequelize.STRING
 });
 
-Vertex.belongsToMany(Vertex, { as: 'Edge', foreignKey: 'VertexId', through: 'Edges'})
+Vertex.belongsToMany(Vertex, { as: 'Edge', foreignKey: 'vertex_id_1', otherKey: 'vertex_id_2', through: 'Edges'})
 
 mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongodb.once('open', () => {
