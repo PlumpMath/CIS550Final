@@ -11,4 +11,4 @@ const InvertedIndexSchema = new Schema({
 
 InvertedIndexSchema.path('keyword').required(true, 'Inverted Index must have a keyword');
 
-mongoose.model('Inverted_Index', InvertedIndexSchema);
+module.exports = mongoose.model('InvertedIndex', InvertedIndexSchema);

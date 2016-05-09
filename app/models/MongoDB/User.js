@@ -15,4 +15,4 @@ const UserSchema = new Schema({
 UserSchema.path('email').required(true, 'User must have an email');
 UserSchema.path('password').required(true, 'User must have a password');
 
-mongoose.model('User', UserSchema);
+module.exports = mongoose.model('User', UserSchema);

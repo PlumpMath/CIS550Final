@@ -9,4 +9,4 @@ const FileSchema = new Schema({
 
 FileSchema.path('url').required(true, 'File must have a url');
 
-mongoose.model('File', FileSchema);
+module.exports = mongoose.model('File', FileSchema);

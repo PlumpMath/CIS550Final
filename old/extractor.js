@@ -5,7 +5,7 @@ var xml2JsonParseString = require("xml2js").parseString;
 var uuid = require('node-uuid');
 var path = require('path');
 var mysql = require('mysql');
-var mongoClient = require('mongodb').MongoClient;
+// var mongoClient = require('mongodb').MongoClient;
 
 var Promise = require('bluebird');
 
