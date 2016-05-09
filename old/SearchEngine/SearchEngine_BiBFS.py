@@ -1,45 +1,25 @@
 import sys
+import os
 import MySQLdb
 
 class SearchEngine:
     """ Search engine for keywords searching"""
-    # connect map temp
-    connectMap = {"1": {"2", "3"},
-                  "2": {"1"},
-                  "3": {"1", "4"},
-                  "4": {"3", "7", "10"},
-                  "5": {"6", "7", "13"},
-                  "6": {"5"},
-                  "7": {"5", "4", "10"},
-                  "8": {"9", "10", "11"},
-                  "9": {"8"},
-                  "10": {"8", "7", "4"},
-                  "11": {"8", "12"},
-                  "12": {"11", "13"},
-                  "13": {"5", "12"}}
 
-    valueMap =   {"1": "file1",
-                  "2": "B",
-                  "3": "team2",
-                  "4": "A",
-                  "5": "file2",
-                  "6": "E",
-                  "7": "A",
-                  "8": "file3",
-                  "9": "D",
-                  "10": "A",
-                  "11": "season",
-                  "12": "C",
-                  "13": "C"}
+    MYSQL_HOST = os.environ.get('MYSQL_HOST')
+    MYSQL_DB = os.environ.get('MYSQL_DB')
+    MYSQL_USER = os.environ.get('MYSQL_USER')
+    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
 
     def __init__(self):
         self.nodeIDs_1 = {}
         self.nodeIDs_2 = {}
 
-        self.db = MySQLdb.connect('datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-                                  'shrekshao',
-                                  '12345678',
-                                  'datalake550')
+        #self.db = MySQLdb.connect('datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+        #                          'shrekshao',
+        #                          '12345678',
+        #                          'datalake550')
+        self.db = MySQLdb.connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB)
+
         self.cursor = self.db.cursor()
         # print "connect with database"
 
@@ -48,7 +28,6 @@ class SearchEngine:
         # print "close database connection"
 
     def GetExpansionList(self, root):
-
         expansionList = set()
         sql = "select node_id_1 from edge2 where node_id_2 = '%s'" % root
         self.cursor.execute(sql)
@@ -64,7 +43,6 @@ class SearchEngine:
 
         return expansionList
 
-        # return self.connectMap[root]
 
     def GetNodeValue(self, nodeID):
         sql = "select value from vertex2 where node_id = '%s'" % nodeID
@@ -73,7 +51,7 @@ class SearchEngine:
         if len(data) == 1:
             return data[0][0]
         else:
-            return self.valueMap[nodeID]
+            return ""
 
 
     def PrintPathInfo(self, p):
