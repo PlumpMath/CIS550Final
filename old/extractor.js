@@ -327,30 +327,9 @@ module.exports = {
                             // TODO: don't add trivial keywords like digital
 
 
-                            // InvertedIndex.findOneAndUpdate({keyword:value}, {$push: {vertex_ids: nodeID}},{upsert:true}, function(err, doc){
+                            InvertedIndex.findOneAndUpdate({keyword:value}, {$push: {vertex_ids: nodeID}},{upsert:true}, function(err, doc){
                                 
 
-                            //     if(doc) {
-                            //         //console.log(doc['keyword']);
-
-                            //         for(i in doc['vertex_ids']) {
-                            //             //console.log(doc['vertex_ids'][i]);
-
-                            //             connection.query('INSERT INTO edge SET ?', 
-                            //             {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
-                            //             function(err, result){
-                            //                 //TODO
-                            //                 if(err) throw err;
-                            //             });
-                            //         }
-                            //     }
-
-                                
-                            // });
-
-                            var query = InvertedIndex.findOneAndUpdate({keyword:value}, {$push: {vertex_ids: nodeID}},{upsert:true}).exec();
-                            query.then(function(err, doc) {
-                                if(err) throw err;
                                 if(doc) {
                                     //console.log(doc['keyword']);
 
@@ -365,9 +344,53 @@ module.exports = {
                                         });
                                     }
                                 }
-                            });
-                            mongooseQueries.push(query);
 
+                                
+                            });
+
+
+                            // var query = InvertedIndex.findOneAndUpdate({keyword:value}, {$push: {vertex_ids: nodeID}},{upsert:true}).exec();
+                            // query.then(function(err, doc) {
+                            //     if(err) throw err;
+                            //     if(doc) {
+                            //         //console.log(doc['keyword']);
+
+                            //         for(i in doc['vertex_ids']) {
+                            //             //console.log(doc['vertex_ids'][i]);
+
+                            //             connection.query('INSERT INTO edge SET ?', 
+                            //             {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
+                            //             function(err, result){
+                            //                 //TODO
+                            //                 if(err) throw err;
+                            //             });
+                            //         }
+                            //     }
+                            // });
+                            // mongooseQueries.push(query);
+
+
+                            // InvertedIndex.findOne({keyword:value}, function(err, doc) {
+                            //     if(err) throw err;
+
+                            //     //console.log(doc);
+                            //     if(doc) {
+                                    
+                            //         for(i in doc['vertex_ids']) {
+                            //             //console.log(doc['vertex_ids'][i]);
+
+                            //             connection.query('INSERT INTO edge SET ?', 
+                            //             {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
+                            //             function(err, result){
+                            //                 //TODO
+                            //                 if(err) throw err;
+                            //             });
+                            //         }
+                            //     }
+                                
+                            //     InvertedIndex.update({keyword: value}, {$push: {vertex_ids: nodeID}}, {upsert: true}).exec();
+
+                            // });
 
 
 
@@ -400,9 +423,10 @@ module.exports = {
             //     mongooseQueries[j].then(function(){mongooseQueries[j+1].exec()});
             // }
 
-            Promise.all(mongooseQueries).then(function(){
-                console.log('all query done');
-            });
+
+            // Promise.all(mongooseQueries).then(function(){
+            //     console.log('all query done');
+            // });
             
         };
         
