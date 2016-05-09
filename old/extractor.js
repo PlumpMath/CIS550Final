@@ -11,7 +11,7 @@ var Promise = require('bluebird');
 
 //var Vertex = require('../app/models/Vertex.js');
 const mongoose = require('mongoose');
-//const User = mongoose.model('User')
+const User = mongoose.model('User')
 const File = mongoose.model('File')
 const InvertedIndex = mongoose.model('InvertedIndex')
 const MySQL = require('../app/models/MySQL');
