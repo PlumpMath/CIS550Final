@@ -1,3 +1,15 @@
+var fs = require("fs");
+var csv2JsonConverter = require("csvtojson").Converter;
+var xml2JsonParseString = require("xml2js").parseString;
+var uuid = require('node-uuid');
+var path = require('path');
+var mysql = require('mysql');
+var mongoClient = require('mongodb').MongoClient;
+
+var Promise = require('bluebird');
+
+var Vertex = require('../app/models/Vertex.js');
+
 module.exports = {
 //var extractJsonFromFile = extractJsonFromFile || {};
 //var Extractor = Extractor || {};
@@ -68,48 +80,41 @@ module.exports = {
     }
     ,
 
-    // insertSQL : function (table, row) {
-        
-    // }
-    // ,
-
-    // deleteSQL : function (table, row) {
-        
-    // }
-    // ,
-
     Extractor : function () {
-        var fs = require("fs");
-        var csv2JsonConverter = require("csvtojson").Converter;
-        var converter = new csv2JsonConverter({});
-        var xml2JsonParseString = require("xml2js").parseString;
-        var uuid = require('node-uuid');
-        var path = require('path');
-        var mysql = require('mysql');
-        var mongoClient = require('mongodb').MongoClient;
-        //var express = require('express');
+
          
         
-        var extractJsonFromFile = function (filename, onload) {
-            var formatName = path.extname(filename);
+        var extractJsonFromFile = function (url, bucket, fileKey, onload) {
+
+            // // download the file from S3
+            // var s3 = new AWS.S3();
+            
+            // var params = {Bucket: bucket, Key: fileKey};
+            // var file = fs.createWriteStream(url);
+            // s3.getObject(params).createReadStream.pipe(file);
+            
+            
+            // extract the file content to json
+            var formatName = path.extname(url);
             switch(formatName) {
                 case '.csv':
-                converter.fromFile(filename, function(err, result) {
-                    onload(result, filename);
+                var converter = new csv2JsonConverter({});
+                converter.fromFile(url, function(err, result) {
+                    onload(result, url);
                 });
                 break;
                 
                 case '.json':
-                fs.readFile(filename, function(err, data){
+                fs.readFile(url, function(err, data){
                     var json = JSON.parse(data);
-                    onload(json, filename);
+                    onload(json, url);
                 });
                 break;
                 
                 case '.xml':
-                fs.readFile(filename, function(err, data){
+                fs.readFile(url, function(err, data){
                     xml2JsonParseString(data, function(err, json){
-                        onload(json, filename);
+                        onload(json, url);
                     });
                 });
                 break;
@@ -159,181 +164,181 @@ module.exports = {
         // * delete file
         // * delete file batch
         
-        this.addFile = function(filename, fileID) {
-            // fileID is a char(24) from mongodb
-            
-            // temp test
-            var connection = mysql.createConnection({
-                host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-                user     : 'shrekshao',
-                password : '12345678',
-                database : 'datalake550'
-            });
-            
-            
-            // var app = express();
-            
-            connection.connect(function(err) {
-                if(!err) {
-                    console.log("Database is connected ... nn");  
+        this.addFile = function(url, bucket, fileKey, fileID) {
                     
-                    extractJsonFromFile(filename, function(json, rootString) {
+            extractJsonFromFile(url, bucket, fileKey, function(json, rootString) {
 
-                        jsonKeyValuePairParser(json, rootString, function(value, nodeString, nodeID, parentID, isLeaf) {
-                            var vertex;
-                            // if ( !isLeaf ) {
-                            //     // insert this node as a record to MySQL
-                                
-                            //     vertex = {
-                            //         'node_id': nodeID
-                            //         ,'parent_id': parentID
-                            //         ,'value': nodeString
-                            //         ,'is_leaf': false
-                            //         ,'file_id': fileID
-                            //     };
-                                
-                            // } else {
-                            //     // insert this node as a record to MySQL
-                                
-                            //     vertex = {
-                            //         'node_id': nodeID
-                            //         ,'parent_id': parentID
-                            //         ,'value': value
-                            //         ,'is_leaf': true
-                            //         ,'file_id': fileID
-                            //     };
-                                
-                            //     // TODO: update invertex index in mongodb
-                            // }
-                            
-                            
-                            vertex = {
-                                'node_id': nodeID
-                                ,'parent_id': parentID
-                                ,'value': isLeaf ? value : nodeString
-                                ,'is_leaf': isLeaf
-                                ,'file_id': fileID
-                            };
-                            
-                            // update Inverted Index
-                            function updateInvertedIndex(db, leaf, callback) {
-                                // if(!leaf) {
-                                //     callback();
-                                // } else {
-                                    db.collection('inverted_index').update(
-                                        {'_id' : value},
-                                        {$push : {'node_ids': nodeID}},
-                                        {upsert: true},
-                                        function(err, object)
-                                        {
-                                            if(err) throw err;
-                                            
-                                            callback();
-                                        }
-                                    );
-                                // }
-                                
-                            }
-                            
-                            // use keyword find all nodeID
-                            function findNodeIDWithKeyword(db, leaf, callback) {
-                                // if(!leaf) {
-                                //     callback();
-                                // } else {
-                                    var cursor = db.collection('inverted_index').find(
-                                        {'keyword' : value}
-                                    );
+                jsonKeyValuePairParser(json, rootString, function(value, nodeString, nodeID, parentID, isLeaf) {
+                    // var vertex;
+                    
+                    // vertex = {
+                    //     'node_id': nodeID
+                    //     ,'parent_id': parentID
+                    //     ,'value': isLeaf ? value : nodeString
+                    //     ,'is_leaf': isLeaf
+                    //     ,'file_id': fileID
+                    // };
+                    
+                    // // update Inverted Index
+                    // function updateInvertedIndex(db, leaf, callback) {
+                    //     // if(!leaf) {
+                    //     //     callback();
+                    //     // } else {
+                    //         db.collection('inverted_index').update(
+                    //             {'_id' : value},
+                    //             {$push : {'node_ids': nodeID}},
+                    //             {upsert: true},
+                    //             function(err, object)
+                    //             {
+                    //                 if(err) throw err;
                                     
-                                    cursor.each(function(err, doc){
-                                        if(err) throw err;
-                                        
-                                        if( doc!=null ) {
-                                            // for each in this array
-                                            // TODO : connect each nodeID in the list with this nodeID
-                                            // insert to edge table
-                                            console.log(doc);
-                                            
-                                            for(i in doc) {
-                                                connection.query('INSERT INTO edge SET ?', 
-                                                {'node_id_1': nodeID, 'node_id_2': doc[i]},
-                                                function(err, result){
-                                                    //TODO
-                                                    if(err) throw err;
-                                                });
-                                            }
-                                        }
-                                        
-                                        
-                                        callback(doc);
-                                    });
-                                // }
-                            }
-                            
-                            
-                            connection.query('INSERT INTO vertex SET ?', vertex, function(err, result){
-                                //TODO
-                                if(err !== null) {
-                                    console.log('Inserting: ---log: ', vertex, err, result);
-                                } else {
-                                    
-                                    // insert parent-child edge
-                                    if (typeof parentID !== 'undefined'
-                                        && parentID != module.exports.globalRootID) {
-                                        var edgeNodes = {'node_id_1': parentID, 'node_id_2': nodeID};
-                                        //insertQuery = mysql.format(insertQuery, edgeNodes);
-                                        connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
-                                            //TODO
-                                            if(err) throw err;
-                                        });
-                                        
-                                    }
-                                    
-                                }
-                                
-                            });
-                            
-                            
-                            if(isLeaf) {
-                                // insert edge connecting nodes sharing the same keyword
-                                mongoClient.connect('mongodb://localhost:27017/datalake', function(err, db) {
-                                    if(err) throw err;
-                                    
-                                    findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
-                                        
-                                        // for (i in nodeIDs) {
-                                        //     //var edge = ;
-                                            
-                                        //     connection.query('INSERT INTO edge SET ?', 
-                                        //     {'node_id_1': nodeID, 'node_id_2': nodeIDs[i]},
-                                        //     function(err, result){
-                                        //         //TODO
-                                        //         if(err) throw err;
-                                        //     });
-                                        // }
-                                        
-                                        updateInvertedIndex(db, isLeaf, function(){});
-                                    });
-                                    
-                                });
-                            }
-                            
-                            
-                            //insertSQL('vertex', vertex);
-                            
-                            //connection.end();
-                            
+                    //                 callback();
+                    //             }
+                    //         );
+                    //     // }
+                        
+                    // }
 
-                            // TODO: update
-                            // update inverted index on each insert? or timely updated
+
+                    // insert to Vertices, Edges
+                    Vertex.create({
+                        'vertex_id': nodeID
+                        //,'parent_id': parentID
+                        ,'value': isLeaf ? value : nodeString
+                        ,'is_leaf': isLeaf
+                        ,'file_id': fileID
+                    }).then(function(vertex){
+                        //Edge.create({'vertex_id_1': parentID, 'vertex_id_2': nodeID});
+                    });
+
+
+                    // connect all vertex sharing the same keyword (mongoose search)
+                    //var invertedIndex = mongoose.model('InvertedIndex', );
+
+
+                    var promise = invertedIndex.findOne({keyword: value}, 'vertex_ids').exec();
+
+                    promise.then(function(keyword){
+                        // insert edges to Edges (mysql)
+                        var edges = [];
+
+                        for (i in keyword.vertex_ids) {
+                            edges.push(Edge.create({'vertex_id_1': keywords.vertex_ids[i], 'vertex_id_2': nodeID}));
+                        }
+                        
+                        // update the inverted index (mongodb)
+
+                    }).then(function(keyword){
+                        keyword.vertex_ids.push(nodeID);
+                    });
+
+
+                    //invertedIndex.findOneAndUpdate({keyword:value}, {$push: nodeID}, {new: true, upsert:true});
+
+                    
+
+                    //------------------------------------
+
+
+
+
+                    //------obsolete----------------
+
+                    // // use keyword find all nodeID
+                    // function findNodeIDWithKeyword(db, leaf, callback) {
+                    //     // if(!leaf) {
+                    //     //     callback();
+                    //     // } else {
+                    //         var cursor = db.collection('inverted_index').find(
+                    //             {'keyword' : value}
+                    //         );
                             
+                    //         cursor.each(function(err, doc){
+                    //             if(err) throw err;
+                                
+                    //             if( doc!=null ) {
+                    //                 // for each in this array
+                    //                 // TODO : connect each nodeID in the list with this nodeID
+                    //                 // insert to edge table
+                    //                 console.log(doc);
+                                    
+                    //                 for(i in doc) {
+                    //                     connection.query('INSERT INTO edge SET ?', 
+                    //                     {'node_id_1': nodeID, 'node_id_2': doc[i]},
+                    //                     function(err, result){
+                    //                         //TODO
+                    //                         if(err) throw err;
+                    //                     });
+                    //                 }
+                    //             }
+                                
+                                
+                    //             callback(doc);
+                    //         });
+                    //     // }
+                    // }
+                    
+                    
+                    // connection.query('INSERT INTO vertex SET ?', vertex, function(err, result){
+                    //     //TODO
+                    //     if(err !== null) {
+                    //         console.log('Inserting: ---log: ', vertex, err, result);
+                    //     } else {
                             
-                        }, module.exports.globalRootID);
-                    });  
-                } else {
-                    throw err;
-                    //console.log("Error connecting database ... nn");    
-                }
-            });
+                    //         // insert parent-child edge
+                    //         if (typeof parentID !== 'undefined'
+                    //             && parentID != module.exports.globalRootID) {
+                    //             var edgeNodes = {'node_id_1': parentID, 'node_id_2': nodeID};
+                    //             //insertQuery = mysql.format(insertQuery, edgeNodes);
+                    //             connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
+                    //                 //TODO
+                    //                 if(err) throw err;
+                    //             });
+                                
+                    //         }
+                            
+                    //     }
+                        
+                    // });
+                    
+                    
+                    //if(isLeaf) {
+                        // // insert edge connecting nodes sharing the same keyword
+                        // mongoClient.connect('mongodb://localhost:27017/datalake', function(err, db) {
+                        //     if(err) throw err;
+                            
+                        //     findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
+                                
+                        //         // for (i in nodeIDs) {
+                        //         //     //var edge = ;
+                                    
+                        //         //     connection.query('INSERT INTO edge SET ?', 
+                        //         //     {'node_id_1': nodeID, 'node_id_2': nodeIDs[i]},
+                        //         //     function(err, result){
+                        //         //         //TODO
+                        //         //         if(err) throw err;
+                        //         //     });
+                        //         // }
+                                
+                        //         updateInvertedIndex(db, isLeaf, function(){});
+                        //     });
+                            
+                        // });
+                    //}
+                    
+                    
+                    //insertSQL('vertex', vertex);
+                    
+                    //connection.end();
+                    
+
+                    // TODO: update
+                    // update inverted index on each insert? or timely updated
+                    
+                    
+                }, null);
+            });  
+
             
             
             // //?

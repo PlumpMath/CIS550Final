@@ -8,6 +8,9 @@ const join = require('path').join;
 const mongoose = require('mongoose');
 const Sequelize = require('sequelize');
 
+const extractorModule = require('./old/extractor.js');
+
+
 const APP_PORT = envvar.number('APP_PORT', 8080);
 const AWS_ACCESS_KEY_ID = envvar.string('AWS_ACCESS_KEY_ID');
 const AWS_SECRET_ACCESS_KEY = envvar.string('AWS_SECRET_ACCESS_KEY');
@@ -63,6 +66,12 @@ app.get('/', (req, res) => {
 
 app.post('/file', (req, res) => {
   console.log(req.body);
+  var extractor = new extractorModule.Extractor();
+  //test
+  // extractor.addFile(req.body);
+
+  // for s3: url, bucket, fileKey, fileID
+  extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
 })
 
 sequelize.sync().then(() => {
