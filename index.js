@@ -20,7 +20,11 @@ const MYSQL_DB = envvar.string('MYSQL_DB');
 const MYSQL_USER = envvar.string('MYSQL_USER');
 const MYSQL_PASSWORD = envvar.string('MYSQL_PASSWORD');
 
-const models = join(__dirname, 'app/models');
+const Users = require('./app/models/MongoDB/User');
+const Files = require('./app/models/MongoDB/File');
+const InvertedIndex = require('./app/models/MongoDB/InvertedIndex');
+const MySQL = require('./app/models/MySQL');
+
 const app = express();
 app.set('views', __dirname + '/views'); // general config
 app.set('view engine', 'pug');
@@ -30,30 +34,10 @@ app.use(bodyParser.urlencoded({extended: true}));
 
 module.exports = app;
 
-fs.readdirSync(models)
-  .filter(file => ~file.search(/^[^\.].*\.js$/))
-  .forEach(file => require(join(models, file)));
-
 mongoose.connect(MONGO_URL);
 
 const mongodb = mongoose.connection;
 
-const sequelize = new Sequelize(MYSQL_DB, MYSQL_USER, MYSQL_PASSWORD, {
-	host: MYSQL_HOST
-});
-
-const Vertex = sequelize.define('Vertex', {
-	vertex_id: {
-    	type: Sequelize.UUID,
-    	defaultValue: Sequelize.UUIDV1,
-    	primaryKey: true
-  	},
-  	value: Sequelize.STRING,
-  	is_leaf: Sequelize.BOOLEAN,
-  	file_id: Sequelize.STRING
-});
-
-Vertex.belongsToMany(Vertex, { as: 'Edge', foreignKey: 'vertex_id_1', otherKey: 'vertex_id_2', through: 'Edges'})
 
 mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongodb.once('open', () => {
@@ -74,7 +58,7 @@ app.post('/file', (req, res) => {
   extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
 })
 
-sequelize.sync().then(() => {
+MySQL.sequelize.sync().then(() => {
   app.listen(APP_PORT, () => {
     console.log('CIS550 Final Project started on port', APP_PORT);
   })
