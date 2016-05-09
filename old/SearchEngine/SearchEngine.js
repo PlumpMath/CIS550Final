@@ -2,6 +2,8 @@ module.exports = {
 
 	SearchEngine : function()
 	{
+		const envvar = require('envvar');
+
 		//connections
 		var mysql;
 		var connection;
@@ -37,10 +39,10 @@ module.exports = {
 			//     database : 'datalake550'
 			// });
 			connection  = mysql.createConnection({
-			    host     : process.env.MYSQL_HOST,
-			    user     : process.env.MYSQL_USER,
-			    password : process.env.MYSQL_PASSWORD,
-			    database : process.env.MYSQL_DB
+			    host     : envvar.string('MYSQL_HOST'),
+			    user     : envvar.string('MYSQL_USER'),
+			    password : envvar.string('MYSQL_PASSWORD'),
+			    database : envvar.string('MYSQL_DB')
 			});
 
 			connection.connect();
@@ -243,10 +245,10 @@ module.exports = {
 			//     database : 'datalake550'
 			// });
 			connection  = mysql.createConnection({
-			    host     : process.env.MYSQL_HOST,
-			    user     : process.env.MYSQL_USER,
-			    password : process.env.MYSQL_PASSWORD,
-			    database : process.env.MYSQL_DB
+			    host     : envvar.string('MYSQL_HOST'),
+			    user     : envvar.string('MYSQL_USER'),
+			    password : envvar.string('MYSQL_PASSWORD'),
+			    database : envvar.string('MYSQL_DB')
 			});
 
 			connection.connect();

@@ -1,12 +1,12 @@
 
-var extractorModule = require('../extractor.js');
-var extractor = new extractorModule.Extractor();
+//var extractorModule = require('../extractor.js');
+//var extractor = new extractorModule.Extractor();
 
 //-------------- search test ---------------------------
 var linkerModule = require('../linker.js');
 var linker = new linkerModule.Linker();
     
-linker.searchQuery(['Bayer Leverkusen'], function(result) {
+linker.searchQuery(['Bayer Leverkusen','Hannover 96'], function(result) {
     //console.log(result);
     var nodelist = [];
 
@@ -16,7 +16,7 @@ linker.searchQuery(['Bayer Leverkusen'], function(result) {
         var search = new searchModule.Search();
         search.StartConnection();
         console.log(result);
-        
+
         search.SearchQuery(result, function (searchResult) {
             
 
@@ -36,14 +36,14 @@ linker.searchQuery(['Bayer Leverkusen'], function(result) {
             }
             nodelist.push(tmp);
         }
-        CallSearchExample(nodelist);
+        CallSearchBidirectionalBFS(nodelist);
     }
 
     console.log(nodelist);
     
 });
 
-function CallSearchExample(nodelist)
+function CallSearchBidirectionalBFS(nodelist)
 {
     var pythonShell = require('python-shell');
 
