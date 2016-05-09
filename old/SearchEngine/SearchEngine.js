@@ -2,6 +2,8 @@ module.exports = {
 
 	SearchEngine : function()
 	{
+		const envvar = require('envvar');
+
 		//connections
 		var mysql;
 		var connection;
@@ -37,10 +39,10 @@ module.exports = {
 			//     database : 'datalake550'
 			// });
 			connection  = mysql.createConnection({
-			    host     : process.env.MYSQL_HOST,
-			    user     : process.env.MYSQL_USER,
-			    password : process.env.MYSQL_PASSWORD,
-			    database : process.env.MYSQL_DB
+			    host     : envvar.string('MYSQL_HOST'),
+			    user     : envvar.string('MYSQL_USER'),
+			    password : envvar.string('MYSQL_PASSWORD'),
+			    database : envvar.string('MYSQL_DB')
 			});
 
 			connection.connect();
@@ -75,7 +77,7 @@ module.exports = {
 		function SearchOneKey(root)
 		{
 
-			var sql = "select parent_id, value from vertex where node_id = ?";
+			var sql = "select parent_id, value from vertex where vertex_id = ?";
 			connection.query(sql, [root], 
 				function(err, rows, fields) {
 					if(err) throw err;
@@ -243,10 +245,10 @@ module.exports = {
 			//     database : 'datalake550'
 			// });
 			connection  = mysql.createConnection({
-			    host     : process.env.MYSQL_HOST,
-			    user     : process.env.MYSQL_USER,
-			    password : process.env.MYSQL_PASSWORD,
-			    database : process.env.MYSQL_DB
+			    host     : envvar.string('MYSQL_HOST'),
+			    user     : envvar.string('MYSQL_USER'),
+			    password : envvar.string('MYSQL_PASSWORD'),
+			    database : envvar.string('MYSQL_DB')
 			});
 
 			connection.connect();
@@ -288,9 +290,9 @@ module.exports = {
 					var searchEngine = new module.exports.SearchEngine();
 					searchEngine.Init(connection);
 
-					searchEngine.SearchKeys([result[0][i]["node_id"]], function(result_keys){
+					searchEngine.SearchKeys([result[0][i]["vertex_id"]], function(result_keys){
 
-						PrintSearchResult(result_keys);
+						// PrintSearchResult(result_keys);
 
 						rankedResult.push(result_keys);
 						if(rankedResult.length == result[0].length)
@@ -313,9 +315,9 @@ module.exports = {
 						var searchEngine = new module.exports.SearchEngine();
 						searchEngine.Init(connection);
 
-						searchEngine.SearchKeys([result[0][i]["node_id"],result[1][j]["node_id"]], function(result_keys){
+						searchEngine.SearchKeys([result[0][i]["vertex_id"],result[1][j]["vertex_id"]], function(result_keys){
 
-							PrintSearchResult(result_keys);
+							// PrintSearchResult(result_keys);
 
 							rankedResult.push(result_keys);
 							if(rankedResult.length == result[0].length * result[1].length)

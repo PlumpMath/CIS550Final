@@ -29,4 +29,5 @@ paths = searchEngine.SearchPath(nodeList[0], nodeList[1])
 searchEngine.DisconnectDatabase()
 
 # print result as JSON, received by node.js script
-print json.dumps(paths)
+print json.dumps(paths, ensure_ascii = False)
+# print paths
