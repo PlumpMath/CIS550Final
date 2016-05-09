@@ -1,6 +1,7 @@
 var fs = require("fs");
 var csv2JsonConverter = require("csvtojson").Converter;
 var xml2JsonParseString = require("xml2js").parseString;
+
 var uuid = require('node-uuid');
 var path = require('path');
 var mysql = require('mysql');
@@ -8,7 +9,13 @@ var mongoClient = require('mongodb').MongoClient;
 
 var Promise = require('bluebird');
 
-var Vertex = require('../app/models/Vertex.js');
+//var Vertex = require('../app/models/Vertex.js');
+const mongoose = require('mongoose');
+//const User = mongoose.model('User')
+const File = mongoose.model('File')
+const InvertedIndex = mongoose.model('InvertedIndex')
+const MySQL = require('../app/models/MySQL');
+
 
 module.exports = {
 //var extractJsonFromFile = extractJsonFromFile || {};
@@ -201,7 +208,7 @@ module.exports = {
 
 
                     // insert to Vertices, Edges
-                    Vertex.create({
+                    MySQL.Vertex.create({
                         'vertex_id': nodeID
                         //,'parent_id': parentID
                         ,'value': isLeaf ? value : nodeString
@@ -213,10 +220,9 @@ module.exports = {
 
 
                     // connect all vertex sharing the same keyword (mongoose search)
-                    //var invertedIndex = mongoose.model('InvertedIndex', );
+                    //var invertedIndex = mongoose.model('InvertedIndex');
 
-
-                    var promise = invertedIndex.findOne({keyword: value}, 'vertex_ids').exec();
+                    var promise = InvertedIndex.findOne({keyword: value}, 'vertex_ids').exec();
 
                     promise.then(function(keyword){
                         // insert edges to Edges (mysql)

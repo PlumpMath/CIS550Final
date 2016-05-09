@@ -45,17 +45,19 @@ mongodb.once('open', () => {
 });
 
 app.get('/', (req, res) => {
-  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'})
-})
+  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
 
-app.post('/file', (req, res) => {
-  console.log(req.body);
   var extractor = new extractorModule.Extractor();
   //test
   // extractor.addFile(req.body);
 
   // for s3: url, bucket, fileKey, fileID
   extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+})
+
+app.post('/file', (req, res) => {
+  console.log(req.body);
+  
 })
 
 MySQL.sequelize.sync().then(() => {
