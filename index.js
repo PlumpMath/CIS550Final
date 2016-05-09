@@ -38,8 +38,6 @@ mongoose.connect(MONGO_URL);
 
 const mongodb = mongoose.connection;
 
-const extractorModule = require('./old/extractor.js');
-
 mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongodb.once('open', () => {
 	console.log('Connected to', MONGO_URL);
@@ -47,13 +45,6 @@ mongodb.once('open', () => {
 
 app.get('/', (req, res) => {
   res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
-
-  var extractor = new extractorModule.Extractor();
-  //test
-  // extractor.addFile(req.body);
-
-  // for s3: url, bucket, fileKey, fileID
-  extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
 })
 
 app.post('/file', (req, res) => {
