@@ -5,13 +5,13 @@ var xml2JsonParseString = require("xml2js").parseString;
 var uuid = require('node-uuid');
 var path = require('path');
 var mysql = require('mysql');
-var mongoClient = require('mongodb').MongoClient;
+// var mongoClient = require('mongodb').MongoClient;
 
 var Promise = require('bluebird');
 
 //var Vertex = require('../app/models/Vertex.js');
 const mongoose = require('mongoose');
-//const User = mongoose.model('User')
+const User = mongoose.model('User')
 const File = mongoose.model('File')
 const InvertedIndex = mongoose.model('InvertedIndex')
 const MySQL = require('../app/models/MySQL');

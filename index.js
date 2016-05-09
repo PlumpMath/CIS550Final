@@ -8,8 +8,6 @@ const join = require('path').join;
 const mongoose = require('mongoose');
 const Sequelize = require('sequelize');
 
-const extractorModule = require('./old/extractor.js');
-
 
 const APP_PORT = envvar.number('APP_PORT', 8080);
 const AWS_ACCESS_KEY_ID = envvar.string('AWS_ACCESS_KEY_ID');
@@ -39,6 +37,8 @@ fs.readdirSync(MongoDB)
 mongoose.connect(MONGO_URL);
 
 const mongodb = mongoose.connection;
+
+const extractorModule = require('./old/extractor.js');
 
 mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongodb.once('open', () => {
