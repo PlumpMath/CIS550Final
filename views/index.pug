@@ -4,13 +4,24 @@ block content
     h1 Welcome to CIS550 Datalake
     h3 Anthony Janocko, Karan Hiremath, Shuai Shao, Zimyang
     hr
-    div
-        h2 Upload a File to be Extracted
-        form(action="/file", method="post", enctype="multipart/form-data")
-            input(type="file", name="file")
-            input(type="submit", value="Upload") 
-    br
-    hr
-    div
-        h2 Enter a list of search queries
-        
+    if (!user)
+        a(href="/login") Login
+        br
+        a(href="/register") Register
+    if (user)
+        p You are currently logged in as #{user.username}
+        a(href="/logout") Logout
+        div
+            h2 Upload a File to be Extracted
+            form(action="/file", method="post", enctype="multipart/form-data")
+                input(type="file", name="file")
+                input(type="submit", value="Upload") 
+            br
+            hr
+        div
+            h2 Enter a Comma-Seperated List of search queries
+            form(action="/search", method="post")
+                input(type="text", name="keywords")
+                input(type="submit", value="Search")
+            br
+            hr

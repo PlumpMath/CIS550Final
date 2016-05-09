@@ -5,10 +5,14 @@ const envvar = require('envvar');
 const express = require('express');
 const fs = require('fs');
 const join = require('path').join;
+const LocalStrategy = require('passport-local').Strategy;
 const mongoose = require('mongoose');
 const multer = require('multer');
+const passport = require('passport');
+const path = require('path');
 const R = require('ramda');
-const S3 = require('multer-s3');
+const session = require('express-session');
+const multerS3 = require('multer-s3');
 const Sequelize = require('sequelize');
 const validUrl = require('valid-url');
 
@@ -23,6 +27,7 @@ const MYSQL_USER = envvar.string('MYSQL_USER');
 const MYSQL_PASSWORD = envvar.string('MYSQL_PASSWORD');
 
 const MongoDB = join(__dirname, 'app/models/MongoDB');
+
 const MySQL = require('./app/models/MySQL');
 
 const getDateTime = () => {
@@ -50,26 +55,33 @@ const getDateTime = () => {
 
 }
 
-const upload = multer({storage: S3({
-    dirname: '/',
+const app = express();
+const s3 = new AWS.S3({ });
+
+app.set('views', __dirname + '/views'); // general config
+app.set('view engine', 'pug');
+app.use(bodyParser.json());
+app.use(session({ 
+  secret: 'super secret cis550',
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
     bucket: AWS_S3_BUCKET,
-    secretAccessKey: AWS_SECRET_ACCESS_KEY,
-    accessKeyId: AWS_ACCESS_KEY_ID,
     region: 'us-east-1',
-    filename: (req, file, cb) => {
+    key: (req, file, cb) => {
       cb(null, getDateTime() + '_' + file.originalname)
     }
   })
 });
-
-
-const app = express();
-app.set('views', __dirname + '/views'); // general config
-app.set('view engine', 'pug');
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
 
 module.exports = app;
 
@@ -77,6 +89,14 @@ module.exports = app;
 fs.readdirSync(MongoDB)
   .filter(file => ~file.search(/^[^\.].*\.js$/))
   .forEach(file => require(join(MongoDB, file)));
+
+const User = mongoose.model('User')
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+const File = mongoose.model('File')
+const InvertedIndex = mongoose.model('InvertedIndex')
 
 mongoose.connect(MONGO_URL);
 
@@ -87,48 +107,60 @@ mongodb.once('open', () => {
 	console.log('Connected to', MONGO_URL);
 });
 
+
 app.get('/', (req, res) => {
-  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
+  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake', user: req.user });
+});
+
+app.get('/register', (req, res) => {
+  res.render('register', { });
 })
+
+app.post('/register', (req, res) => {
+
+  User.register(new User({
+    first: req.body.first,
+    last: req.body.last,
+    username: req.body.username,
+    email: req.body.email
+  }), req.body.password, (err, account) => {
+    if (err) {
+      console.log(err);
+      return res.render('register', { user: user });
+    }
+
+    console.log(account);
+
+    passport.authenticate('local')(req, res, () => {
+      res.redirect('/');
+    })
+  })
+})
+
+app.get('/login', (req, res) => {
+  res.render('login', { user: req.user });
+});
+
+app.post('/login', passport.authenticate('local'), (req, res) => {
+  res.redirect('/');
+});
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  res.redirect('/');
+});
 
 app.post('/file', upload.single('file'), (req, res, next) => {
-  if (!req.file) {
-    return res.status(403).send('No file found!').end();
-  }
-
-  const file = req.file;
-
-  const mimeTypes = ['application/xml', 'text/xml', 'application/json', 'text/csv'];
-
-  if(R.not(R.contains(file.mimetype, mimeTypes))) {
-    return res.status(403).send('Unsupported File Type!').end()
-  }
-
-  console.log(file);
-
-  const date = new Date();
   
-  
+  const filePromise = File.create({ 
+    url: req.file.location,
+    user_id: req.user._id
+  });
 
-  const newFileName = getDateTime() + '_' + file.originalname;
-  
-  const uploadParams = {
-    Bucket: AWS_S3_BUCKET,
-    Key: newFileName,
-    Body: fs.createReadStream(file.path)
-  };
-
-  // if (validUrl.isUri(url)) {
-
-  //   // upload to s3
-  //   // create mongodb 
-
-  //   res.render('file', { title: 'CIS550 Datalake | New File', message: 'New File Added!' })
-  // } else {
-
-  // }
-  
-})
+  filePromise.then((doc) => {
+    console.log(doc);
+  });
+});
 
 MySQL.sequelize.sync().then(() => {
   app.listen(APP_PORT, () => {
