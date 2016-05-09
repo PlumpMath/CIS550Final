@@ -161,3 +161,97 @@ class SearchEngine:
             head += 1
 
         return resultPaths
+
+
+    def SearchBidirectional(self):
+        resultPaths = []
+
+        hashNode1 = set()
+        hashNode2 = set()
+        
+        queue1 = list()
+        queue2 = list()
+
+        nodeInQueueMap1 = {}
+        nodeInQueueMap2 = {}
+
+        # initialize first search
+        for id in self.nodeIDs_1:
+            hashNode1.add(id)
+            nodeInQueueMap1[id] = len(queue1)
+            queue1.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+
+        for id in self.nodeIDs_2:
+            hashNode2.add(id)
+            nodeInQueueMap2[id] = len(queue2)
+            queue2.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+
+        head1 = 0
+        head2 = 0
+
+        while head1 < len(queue1) and head2 < len(queue2):
+            # expand search_1
+            expansionList1 = self.GetExpansionList(queue1[head1]["id"])
+            for newID in expansionList1:
+                if newID in hashNode2: # found pass throuhg 1->2
+                    resultPath = []
+
+                    tmp = head1
+                    while tmp != -1:
+                        resultPath.append(self.CreatePathNode(queue1[tmp]["id"], queue1[tmp]["value"]))
+                        tmp = queue1[tmp]["prev"]
+
+                    resultPath.reverse()
+                    
+                    tmp = nodeInQueueMap2[newID]
+                    while tmp != -1:
+                        resultPath.append(self.CreatePathNode(queue2[tmp]["id"], queue2[tmp]["value"]))
+                        tmp = queue2[tmp]["prev"]
+
+                    resultPaths.append(resultPath)
+
+                else: # not in queue2
+                    if newID not in hashNode1: # expand new id 
+                        hashNode1.add(newID)
+                        nodeInQueueMap1[newID] = len(queue1)
+                        queue1.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head1))
+            head1 += 1
+
+            # expand search_2
+            expansionList2 = self.GetExpansionList(queue2[head2]["id"])
+            for newID in expansionList2:
+                if newID in hashNode1: # found pass throuhg 2->1
+                    resultPath = []
+
+                    tmp = nodeInQueueMap1[newID]
+                    while tmp != -1:
+                        resultPath.append(self.CreatePathNode(queue1[tmp]["id"], queue1[tmp]["value"]))
+                        tmp = queue1[tmp]["prev"]
+
+                    resultPath.reverse()
+
+                    tmp = head2
+                    while tmp != -1:
+                        resultPath.append(self.CreatePathNode(queue2[tmp]["id"], queue2[tmp]["value"]))
+                        tmp = queue2[tmp]["prev"]
+
+                    resultPaths.append(resultPath)
+
+                else: # not in queue1
+                    if newID not in hashNode2: # expand new id 
+                        hashNode2.add(newID)
+                        nodeInQueueMap2[newID] = len(queue2)
+                        queue2.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head2))
+            head2 += 1
+
+        return resultPaths
+
+
+
+
+
+
+
+
+
+
