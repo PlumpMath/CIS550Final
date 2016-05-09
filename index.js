@@ -17,24 +17,25 @@ const MYSQL_DB = envvar.string('MYSQL_DB');
 const MYSQL_USER = envvar.string('MYSQL_USER');
 const MYSQL_PASSWORD = envvar.string('MYSQL_PASSWORD');
 
-const Users = require('./app/models/MongoDB/User');
-const Files = require('./app/models/MongoDB/File');
-const InvertedIndex = require('./app/models/MongoDB/InvertedIndex');
+const MongoDB = join(__dirname, 'app/models/MongoDB');
 const MySQL = require('./app/models/MySQL');
 
 const app = express();
 app.set('views', __dirname + '/views'); // general config
 app.set('view engine', 'pug');
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
-
+app.use(bodyParser.urlencoded({extended: true }));
 
 module.exports = app;
+
+// Bootstrap models
+fs.readdirSync(MongoDB)
+  .filter(file => ~file.search(/^[^\.].*\.js$/))
+  .forEach(file => require(join(MongoDB, file)));
 
 mongoose.connect(MONGO_URL);
 
 const mongodb = mongoose.connection;
-
 
 mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongodb.once('open', () => {
@@ -47,6 +48,7 @@ app.get('/', (req, res) => {
 
 app.post('/file', (req, res) => {
   console.log(req.body);
+  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'})
 })
 
 MySQL.sequelize.sync().then(() => {
