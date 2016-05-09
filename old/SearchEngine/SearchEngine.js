@@ -30,11 +30,17 @@ module.exports = {
 		{
 			mysql 		= require('mysql');
 
+			// connection  = mysql.createConnection({
+			//     host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+			//     user     : 'shrekshao',
+			//     password : '12345678',
+			//     database : 'datalake550'
+			// });
 			connection  = mysql.createConnection({
-			    host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-			    user     : 'shrekshao',
-			    password : '12345678',
-			    database : 'datalake550'
+			    host     : process.env.MYSQL_HOST,
+			    user     : process.env.MYSQL_USER,
+			    password : process.env.MYSQL_PASSWORD,
+			    database : process.env.MYSQL_DB
 			});
 
 			connection.connect();
@@ -230,11 +236,17 @@ module.exports = {
 		{
 			mysql 		= require('mysql');
 
+			// connection  = mysql.createConnection({
+			//     host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+			//     user     : 'shrekshao',
+			//     password : '12345678',
+			//     database : 'datalake550'
+			// });
 			connection  = mysql.createConnection({
-			    host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-			    user     : 'shrekshao',
-			    password : '12345678',
-			    database : 'datalake550'
+			    host     : process.env.MYSQL_HOST,
+			    user     : process.env.MYSQL_USER,
+			    password : process.env.MYSQL_PASSWORD,
+			    database : process.env.MYSQL_DB
 			});
 
 			connection.connect();
