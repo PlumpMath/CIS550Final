@@ -40,10 +40,38 @@ const mongodb = mongoose.connection;
 
 const extractorModule = require('./old/extractor.js');
 
+const linkerModule = require('./old/linker.js');
+
+
+
 mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
 mongodb.once('open', () => {
 	console.log('Connected to', MONGO_URL);
 });
+
+
+var connection;
+function createRawMySQLConnection()
+{
+  var mysql = require('mysql');
+
+  // connection  = mysql.createConnection({
+  //     host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+  //     user     : 'shrekshao',
+  //     password : '12345678',
+  //     database : 'datalake550'
+  // });
+  connection  = mysql.createConnection({
+      host     : process.env.MYSQL_HOST,
+      user     : process.env.MYSQL_USER,
+      password : process.env.MYSQL_PASSWORD,
+      database : process.env.MYSQL_DB
+  });
+
+  connection.connect();
+} 
+createRawMySQLConnection();
+
 
 app.get('/', (req, res) => {
   res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
@@ -53,7 +81,15 @@ app.get('/', (req, res) => {
   // extractor.addFile(req.body);
 
   // for s3: url, bucket, fileKey, fileID
-  extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+  console.log('add local file test');
+  extractor.initConnection(connection);
+  //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+  extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
+
+  // console.log('query from mongo test');
+  // var linker = new linkerModule.Linker();
+    
+  // linker.searchQuery(['2013-08-09','BVB'], function(result){});
 })
 
 app.post('/file', (req, res) => {

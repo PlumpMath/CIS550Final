@@ -1,3 +1,12 @@
+var Promise = require('bluebird');
+
+//var Vertex = require('../app/models/Vertex.js');
+const mongoose = require('mongoose');
+const User = mongoose.model('User')
+const File = mongoose.model('File')
+const InvertedIndex = mongoose.model('InvertedIndex')
+const MySQL = require('../app/models/MySQL');
+
 module.exports = {
     
     
@@ -13,42 +22,48 @@ module.exports = {
             // TODO
             
             
-            // temp test version:
-            // without an inverted index
-            // select by use sql to search
-            var connection = mysql.createConnection({
-                host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-                user     : 'shrekshao',
-                password : '12345678',
-                database : 'datalake550'
+            // // temp test version:
+            // // without an inverted index
+            // // select by use sql to search
+            // var connection = mysql.createConnection({
+            //     host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+            //     user     : 'shrekshao',
+            //     password : '12345678',
+            //     database : 'datalake550'
+            // });
+
+            // connection.connect(function(err) {
+            //     if(!err) {
+            //         var root = {
+            //             'vertex_id': module.exports.globalRootID
+            //             ,'parent_id': null
+            //             ,'value': 'datalake-root'
+            //             ,'is_leaf': false
+            //             ,'file_id': 'root'
+            //         };
+                    
+            //         var q = 'SELECT vertex_id FROM vertex WHERE is_leaf=TRUE AND value=' + connection.escape(word);
+                    
+            //         connection.query(q, function(err, result){
+            //             if(err) {
+            //                 throw err;
+            //             } else {
+            //                 onLoaded(result);
+            //             }
+            //             connection.end();               
+            //         });
+                    
+                    
+            //     } else {
+            //         throw err;
+            //     }
+            // });
+
+            InvertedIndex.findOne({'keyword': word}, 'vertex_ids').then(function(err, doc){
+                console.log(doc);
+                onLoaded(doc);
             });
 
-            connection.connect(function(err) {
-                if(!err) {
-                    var root = {
-                        'node_id': module.exports.globalRootID
-                        ,'parent_id': null
-                        ,'value': 'datalake-root'
-                        ,'is_leaf': false
-                        ,'file_id': 'root'
-                    };
-                    
-                    var q = 'SELECT node_id FROM vertex WHERE is_leaf=TRUE AND value=' + connection.escape(word);
-                    
-                    connection.query(q, function(err, result){
-                        if(err) {
-                            throw err;
-                        } else {
-                            onLoaded(result);
-                        }
-                        connection.end();               
-                    });
-                    
-                    
-                } else {
-                    throw err;
-                }
-            });
             
 
         }
