@@ -18,7 +18,8 @@ class SearchEngine:
         #                          'shrekshao',
         #                          '12345678',
         #                          'datalake550')
-        self.db = MySQLdb.connect(MYSQL_HOST, MYSQL_USER, MYSQL_PASSWORD, MYSQL_DB)
+        #call("cis550", shell=True , env=dict(ENV='~/.bash_profile'))
+        self.db = MySQLdb.connect(self.MYSQL_HOST, self.MYSQL_USER, self.MYSQL_PASSWORD, self.MYSQL_DB)
 
         self.cursor = self.db.cursor()
         # print "connect with database"
@@ -29,13 +30,13 @@ class SearchEngine:
 
     def GetExpansionList(self, root):
         expansionList = set()
-        sql = "select node_id_1 from edge2 where node_id_2 = '%s'" % root
+        sql = "select vertex_id_1 from edge where vertex_id_2 = '%s'" % root
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
         for row in data:
             expansionList.add(row[0])
 
-        sql = "select node_id_2 from edge2 where node_id_1 = '%s'" % root
+        sql = "select vertex_id_2 from edge where vertex_id_1 = '%s'" % root
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
         for row in data:
@@ -45,7 +46,7 @@ class SearchEngine:
 
 
     def GetNodeValue(self, nodeID):
-        sql = "select value from vertex2 where node_id = '%s'" % nodeID
+        sql = "select value from vertex where vertex_id = '%s'" % nodeID
         self.cursor.execute(sql)
         data = self.cursor.fetchall()
         if len(data) == 1:
@@ -85,7 +86,9 @@ class SearchEngine:
 
         return resultPaths
         '''
-        resultPaths = self.SearchStartFromMultipleNodes()
+        # resultPaths = self.SearchStartFromMultipleNodes()
+        resultPaths = self.SearchBidirectional()
+        resultPaths = sorted(resultPaths, key = len)
         return resultPaths
 
 
@@ -94,7 +97,6 @@ class SearchEngine:
 
     def CreatePathNode(self, nodeId, nodeValue):
         return {"id": nodeId, "value": nodeValue}
-
 
     def SearchStartFromNode(self, root):
         hashNode = set()
@@ -245,13 +247,4 @@ class SearchEngine:
             head2 += 1
 
         return resultPaths
-
-
-
-
-
-
-
-
-
 

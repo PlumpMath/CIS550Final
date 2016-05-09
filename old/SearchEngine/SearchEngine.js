@@ -75,7 +75,7 @@ module.exports = {
 		function SearchOneKey(root)
 		{
 
-			var sql = "select parent_id, value from vertex where node_id = ?";
+			var sql = "select parent_id, value from vertex where vertex_id = ?";
 			connection.query(sql, [root], 
 				function(err, rows, fields) {
 					if(err) throw err;
@@ -288,9 +288,9 @@ module.exports = {
 					var searchEngine = new module.exports.SearchEngine();
 					searchEngine.Init(connection);
 
-					searchEngine.SearchKeys([result[0][i]["node_id"]], function(result_keys){
+					searchEngine.SearchKeys([result[0][i]["vertex_id"]], function(result_keys){
 
-						PrintSearchResult(result_keys);
+						// PrintSearchResult(result_keys);
 
 						rankedResult.push(result_keys);
 						if(rankedResult.length == result[0].length)
@@ -313,9 +313,9 @@ module.exports = {
 						var searchEngine = new module.exports.SearchEngine();
 						searchEngine.Init(connection);
 
-						searchEngine.SearchKeys([result[0][i]["node_id"],result[1][j]["node_id"]], function(result_keys){
+						searchEngine.SearchKeys([result[0][i]["vertex_id"],result[1][j]["vertex_id"]], function(result_keys){
 
-							PrintSearchResult(result_keys);
+							// PrintSearchResult(result_keys);
 
 							rankedResult.push(result_keys);
 							if(rankedResult.length == result[0].length * result[1].length)
