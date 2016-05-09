@@ -9,6 +9,8 @@ class SearchEngine:
     MYSQL_DB = os.environ.get('MYSQL_DB')
     MYSQL_USER = os.environ.get('MYSQL_USER')
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
+    MAX_PASS_NUMBER = 20
+    OPT_MAX_PASS_NUMBER = True
 
     def __init__(self):
         self.nodeIDs_1 = {}
@@ -58,7 +60,7 @@ class SearchEngine:
     def PrintPathInfo(self, p):
         print "========================================="
         for node in p:
-            print "id:", node["id"], " value:", node["value"]
+            print "vertex_id:", node["vertex_id"], " value:", node["value"]
         print ""
 
     def SearchPath(self, nodeIDs_1, nodeIDs_2):
@@ -86,17 +88,37 @@ class SearchEngine:
 
         return resultPaths
         '''
-        # resultPaths = self.SearchStartFromMultipleNodes()
+        #resultPaths = self.SearchStartFromMultipleNodes()
         resultPaths = self.SearchBidirectional()
         resultPaths = sorted(resultPaths, key = len)
         return resultPaths
 
 
-    def CreateSearchNode(self, nodeId, nodeValue, prev):
-        return {"id": nodeId, "value": nodeValue, "prev": prev}
+    # def CreateSearchNode(self, nodeId, nodeValue, prev):
+    #     return {"vertex_id": nodeId, "value": nodeValue, "prev": prev}
 
-    def CreatePathNode(self, nodeId, nodeValue):
-        return {"id": nodeId, "value": nodeValue}
+    # def CreatePathNode(self, nodeId, nodeValue):
+    #     return {"vertex_id": nodeId, "value": nodeValue}
+
+    def CreateSearchNode(self, nodeId, prev):
+        sql = "select value, file_id from vertex where vertex_id = '%s'" % nodeId
+        self.cursor.execute(sql)
+        data = self.cursor.fetchall()
+        
+        if len(data) == 1:
+            nodeValue = data[0][0]
+            nodeFileId = data[0][1]
+            return {"vertex_id": nodeId, "value": nodeValue, "file_id": nodeFileId, "prev": prev}
+        else:
+            return None
+
+
+    # def CreatePathNode(self, nodeId, nodeValue, nodeFileId):
+    #     return {"vertex_id": nodeId, "value": nodeValue, "file_id": nodeFileId}
+
+    def CreatePathNode(self, node):
+        return {"vertex_id": node["vertex_id"], "value": node["value"], "file_id": node["file_id"]}
+
 
     def SearchStartFromNode(self, root):
         hashNode = set()
@@ -104,23 +126,26 @@ class SearchEngine:
             hashNode.add(id)
 
         queue = list()
-        queue.append(self.CreateSearchNode(root, self.GetNodeValue(root), -1))
+        # queue.append(self.CreateSearchNode(root, self.GetNodeValue(root), -1))
+        queue.append(self.CreateSearchNode(root, -1))
 
         head = 0
 
         while head < len(queue):
-            expansionList = self.GetExpansionList(queue[head]["id"])
+            expansionList = self.GetExpansionList(queue[head]["vertex_id"])
             for newID in expansionList:
                 if newID not in hashNode:
                     hashNode.add(newID)
-                    queue.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head))
+                    # queue.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head))
+                    queue.append(self.CreateSearchNode(newID, head))
 
-            if queue[head]["id"] in self.nodeIDs_2:
+            if queue[head]["vertex_id"] in self.nodeIDs_2:
                 resultPath = []
                 tmp = head
 
                 while tmp != -1:
-                    resultPath.append(self.CreatePathNode(queue[tmp]["id"], queue[tmp]["value"]))
+                    # resultPath.append(self.CreatePathNode(queue[tmp]["vertex_id"], queue[tmp]["value"]))
+                    resultPath.append(self.CreatePathNode(queue[tmp]))
                     tmp = queue[tmp]["prev"]
 
                 resultPath.reverse()
@@ -138,27 +163,32 @@ class SearchEngine:
 
         for id in self.nodeIDs_1:
             hashNode.add(id)
-            queue.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+            # queue.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+            queue.append(self.CreateSearchNode(id, -1))
 
         head = 0
         while head < len(queue):
-            expansionList = self.GetExpansionList(queue[head]["id"])
+            expansionList = self.GetExpansionList(queue[head]["vertex_id"])
             for newID in expansionList:
                 if newID not in hashNode:
                     hashNode.add(newID)
-                    queue.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head))
+                    #queue.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head))
+                    queue.append(self.CreateSearchNode(newID, head))
 
-            if queue[head]["id"] in self.nodeIDs_2:
+            if queue[head]["vertex_id"] in self.nodeIDs_2:
                 resultPath = []
                 tmp = head
 
                 while tmp != -1:
-                    resultPath.append(self.CreatePathNode(queue[tmp]["id"], queue[tmp]["value"]))
+                    #resultPath.append(self.CreatePathNode(queue[tmp]["vertex_id"], queue[tmp]["value"]))
+                    resultPath.append(self.CreatePathNode(queue[tmp]))
                     tmp = queue[tmp]["prev"]
 
                 resultPath.reverse()
 
                 resultPaths.append(resultPath)
+                if self.OPT_MAX_PASS_NUMBER == True and len(resultPaths) >= self.MAX_PASS_NUMBER:
+                    return resultPaths
 
             head += 1
 
@@ -181,69 +211,76 @@ class SearchEngine:
         for id in self.nodeIDs_1:
             hashNode1.add(id)
             nodeInQueueMap1[id] = len(queue1)
-            queue1.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+            #queue1.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+            queue1.append(self.CreateSearchNode(id, -1))
 
         for id in self.nodeIDs_2:
             hashNode2.add(id)
             nodeInQueueMap2[id] = len(queue2)
-            queue2.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+            # queue2.append(self.CreateSearchNode(id, self.GetNodeValue(id), -1))
+            queue2.append(self.CreateSearchNode(id, -1))
 
         head1 = 0
         head2 = 0
 
         while head1 < len(queue1) and head2 < len(queue2):
             # expand search_1
-            expansionList1 = self.GetExpansionList(queue1[head1]["id"])
+            expansionList1 = self.GetExpansionList(queue1[head1]["vertex_id"])
             for newID in expansionList1:
                 if newID in hashNode2: # found pass throuhg 1->2
                     resultPath = []
 
                     tmp = head1
                     while tmp != -1:
-                        resultPath.append(self.CreatePathNode(queue1[tmp]["id"], queue1[tmp]["value"]))
+                        resultPath.append(self.CreatePathNode(queue1[tmp]))
                         tmp = queue1[tmp]["prev"]
 
                     resultPath.reverse()
                     
                     tmp = nodeInQueueMap2[newID]
                     while tmp != -1:
-                        resultPath.append(self.CreatePathNode(queue2[tmp]["id"], queue2[tmp]["value"]))
+                        resultPath.append(self.CreatePathNode(queue2[tmp]))
                         tmp = queue2[tmp]["prev"]
 
                     resultPaths.append(resultPath)
+                    if self.OPT_MAX_PASS_NUMBER == True and len(resultPaths) >= self.MAX_PASS_NUMBER:
+                        return resultPaths
 
                 else: # not in queue2
                     if newID not in hashNode1: # expand new id 
                         hashNode1.add(newID)
                         nodeInQueueMap1[newID] = len(queue1)
-                        queue1.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head1))
+                        # queue1.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head1))
+                        queue1.append(self.CreateSearchNode(newID, head1))
             head1 += 1
 
             # expand search_2
-            expansionList2 = self.GetExpansionList(queue2[head2]["id"])
+            expansionList2 = self.GetExpansionList(queue2[head2]["vertex_id"])
             for newID in expansionList2:
                 if newID in hashNode1: # found pass throuhg 2->1
                     resultPath = []
 
                     tmp = nodeInQueueMap1[newID]
                     while tmp != -1:
-                        resultPath.append(self.CreatePathNode(queue1[tmp]["id"], queue1[tmp]["value"]))
+                        resultPath.append(self.CreatePathNode(queue1[tmp]))
                         tmp = queue1[tmp]["prev"]
 
                     resultPath.reverse()
 
                     tmp = head2
                     while tmp != -1:
-                        resultPath.append(self.CreatePathNode(queue2[tmp]["id"], queue2[tmp]["value"]))
+                        resultPath.append(self.CreatePathNode(queue2[tmp]))
                         tmp = queue2[tmp]["prev"]
 
                     resultPaths.append(resultPath)
+                    if self.OPT_MAX_PASS_NUMBER == True and len(resultPaths) >= self.MAX_PASS_NUMBER:
+                        return resultPaths
 
                 else: # not in queue1
                     if newID not in hashNode2: # expand new id 
                         hashNode2.add(newID)
                         nodeInQueueMap2[newID] = len(queue2)
-                        queue2.append(self.CreateSearchNode(newID, self.GetNodeValue(newID), head2))
+                        queue2.append(self.CreateSearchNode(newID, head2))
             head2 += 1
 
         return resultPaths

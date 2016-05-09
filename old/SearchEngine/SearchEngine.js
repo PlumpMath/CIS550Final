@@ -14,6 +14,7 @@ module.exports = {
 		var keys; // search keys
 		var connectMap; // tree connect list of node
 		var tagMap;	   // node tag map
+		var fileMap;  //file id map
 
 		//var containedKeysMap;  // for finding nearest common parent node
 		var treeRootID;  	// search result -> tree root id
@@ -60,6 +61,8 @@ module.exports = {
 			numberOfKeys = keys.length;
 			connectMap = new Map();
 			tagMap = new Map();
+			fileMap = new Map();
+
 			//containedKeysMap = new Map();
 			nearestCommonParentID = -1;
 
@@ -77,12 +80,14 @@ module.exports = {
 		function SearchOneKey(root)
 		{
 
-			var sql = "select parent_id, value from vertex where vertex_id = ?";
+			var sql = "select parent_id, value, file_id from vertex where vertex_id = ?";
 			connection.query(sql, [root], 
 				function(err, rows, fields) {
 					if(err) throw err;
 
 					tagMap.set(root, rows[0].value);
+					fileMap.set(root, rows[0].file_id);
+
 					// if(containedKeysMap.has(root) == false);
 					// 	containedKeysMap.set(root, 1);
 
@@ -162,7 +167,8 @@ module.exports = {
 				{
 				connectMap : connectMap,
 				tagMap : tagMap,
-				nearestCommonParentID : nearestCommonParentID,
+				fileMap : fileMap,
+				//nearestCommonParentID : nearestCommonParentID,
 				treeRootID : treeRootID,
 				totalEdgeNumber : totalEdgeNumber
 				};
@@ -225,6 +231,8 @@ module.exports = {
 
 	Search : function()
 	{
+		const envvar = require('envvar');
+
 		//connections
 		var mysql;
 		var connection;
@@ -232,7 +240,8 @@ module.exports = {
 		//
 		this.StartConnection = StartConnection;
 		this.EndConnection = EndConnection;
-		this.SearchQuery = SearchQuery;
+		//this.SearchQuery = SearchQuery;
+		this.StartSearch = StartSearch;
 
 		function StartConnection()
 		{
@@ -282,20 +291,18 @@ module.exports = {
 		{
 			var rankedResult = new Array();
 
-			if(result.length == 1)
-			{
-				for(var i=0;i<result[0].length;i++)
+			for(var i=0;i<result.length;i++)
 				{
 					//console.log	("single search");
 					var searchEngine = new module.exports.SearchEngine();
 					searchEngine.Init(connection);
 
-					searchEngine.SearchKeys([result[0][i]["vertex_id"]], function(result_keys){
+					searchEngine.SearchKeys([result[i]["vertex_id"]], function(result_keys){
 
 						// PrintSearchResult(result_keys);
 
 						rankedResult.push(result_keys);
-						if(rankedResult.length == result[0].length)
+						if(rankedResult.length == result.length)
 						{
 							rankedResult.sort(function(a,b){
 									return a.totalEdgeNumber - b.totalEdgeNumber;
@@ -305,32 +312,163 @@ module.exports = {
 
 					});
 				}
-			}
-			else if(result.length == 2)
+
+			// if(result.length == 1)
+			// {
+			// 	for(var i=0;i<result[0].length;i++)
+			// 	{
+			// 		//console.log	("single search");
+			// 		var searchEngine = new module.exports.SearchEngine();
+			// 		searchEngine.Init(connection);
+
+			// 		searchEngine.SearchKeys([result[0][i]["vertex_id"]], function(result_keys){
+
+			// 			// PrintSearchResult(result_keys);
+
+			// 			rankedResult.push(result_keys);
+			// 			if(rankedResult.length == result[0].length)
+			// 			{
+			// 				rankedResult.sort(function(a,b){
+			// 						return a.totalEdgeNumber - b.totalEdgeNumber;
+			// 				});
+			// 				cb(rankedResult);
+			// 			}
+
+			// 		});
+			// 	}
+			// }
+			// else if(result.length == 2)
+			// {
+			// 	for(var i=0;i<result[0].length;i++)
+			// 		for(var j=0;j<result[1].length;j++)
+			// 		{
+			// 			//console.log("double search");
+			// 			var searchEngine = new module.exports.SearchEngine();
+			// 			searchEngine.Init(connection);
+
+			// 			searchEngine.SearchKeys([result[0][i]["vertex_id"],result[1][j]["vertex_id"]], function(result_keys){
+
+			// 				// PrintSearchResult(result_keys);
+
+			// 				rankedResult.push(result_keys);
+			// 				if(rankedResult.length == result[0].length * result[1].length)
+			// 				{
+			// 					rankedResult.sort(function(a,b){
+			// 						return a.totalEdgeNumber - b.totalEdgeNumber;
+			// 					});
+			// 					cb(rankedResult);
+			// 				}
+
+			// 			});
+			// 		}
+			// }
+		}
+
+		function StartSearch(result, cb)
+		{
+			//var rankedResult = new Array();
+		
+			if(result.length == 1)
 			{
-				for(var i=0;i<result[0].length;i++)
-					for(var j=0;j<result[1].length;j++)
-					{
-						//console.log("double search");
-						var searchEngine = new module.exports.SearchEngine();
-						searchEngine.Init(connection);
+				StartConnection();
+		        //console.log(result);
 
-						searchEngine.SearchKeys([result[0][i]["vertex_id"],result[1][j]["vertex_id"]], function(result_keys){
+		        SearchQuery(result[0], function (searchResult) {
+		            
+		            //console.log(searchResult);
+		            //rankedResult = searchResult;
 
-							// PrintSearchResult(result_keys);
+		            var parsedResult = [];
+		            for(var i=0;i<searchResult.length;i++)
+		            {
+		            	path = [];
+		            	var connectMap = searchResult[i]["connectMap"];
+		            	var valueMap = searchResult[i]["tagMap"];
+		            	var fileMap = searchResult[i]["fileMap"];
+		            	var rootID = searchResult[i]["treeRootID"];
 
-							rankedResult.push(result_keys);
-							if(rankedResult.length == result[0].length * result[1].length)
-							{
-								rankedResult.sort(function(a,b){
-									return a.totalEdgeNumber - b.totalEdgeNumber;
-								});
-								cb(rankedResult);
-							}
+		            	while(rootID != undefined)
+		            	{
+		            		path.push( {"vertex_id" : rootID, 
+		            				    "value"     : valueMap.get(rootID),
+		            				    "file_id"	: fileMap.get(rootID) } );
 
-						});
-					}
-			}
+		            		var children = connectMap.get(rootID);
+		            		//console.log(children);
+		            		if(children == undefined)
+		            			rootID = undefined;
+		            		else
+		            		{
+		            			children = Array.from(children);
+		            			rootID = children[0];
+		            		}
+		            	}
+
+		            	path.reverse();
+		            	parsedResult.push(path);
+		            }
+
+		            cb(parsedResult);
+
+		            EndConnection();
+		        });
+	    	}
+	    	else if(result.length == 2)
+	    	{
+	    		if(result[0].length == 0 || result[1].length == 0)
+	    		{
+	    			cb([]);
+	    		}
+	    		else
+	    		{
+		    		var nodelist = [];
+		    		for(var i=0;i<result.length;i++)
+			        {
+			            var tmp = [];
+			            for(var j=0;j<result[i].length;j++)
+			            {
+			                tmp.push(result[i][j]["vertex_id"]);
+			            }
+			            nodelist.push(tmp);
+			        }
+			        CallSearchBidirectionalBFS(nodelist, cb);
+		    	}
+	    	}
+	    	else
+	    	{
+	    		cb([]);
+	    	}
+
+		}
+
+		function CallSearchBidirectionalBFS(nodelist, cb)
+		{
+		    var pythonShell = require('python-shell');
+
+		    var options = {
+		        mode: 'text',
+		        args: nodelist
+		    };
+
+		    pythonShell.run('SearchEngineWrapperForNodejs.py', options, function(err, result){
+		        if(err) throw err;
+
+		        var obj = JSON.parse(result);
+		        //console.log(obj);
+		        //var jsonfile = require('jsonfile')
+		        //var file = './data.json'
+		        //jsonfile.writeFile(file, obj)
+		        // console.log(result);
+		        //console.log("pass number:", obj.length);
+		        var parsedResult = [];
+
+		        for(var i=0;i<obj.length;i++)
+		        {
+		        	parsedResult.push(obj[i]);
+		        }
+
+		        cb(parsedResult);
+		    });
 		}
 
 
