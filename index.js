@@ -143,11 +143,11 @@ createRawMySQLConnection();
 app.get('/', (req, res) => {
   res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
 
-  // for s3: url, bucket, fileKey, fileID
-  console.log('add local file test');
-  extractor.initConnection(connection);
-  //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
-  extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
+  // // for s3: url, bucket, fileKey, fileID
+  // console.log('add local file test');
+  // extractor.initConnection(connection);
+  // //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+  // extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
 
   // console.log('query from mongo test');
   // var linker = new linkerModule.Linker();
@@ -209,7 +209,17 @@ app.post('/file', upload.single('file'), (req, res, next) => {
 
   filePromise.then((doc) => {
     console.log(doc);
+
+    // for s3: url, bucket, fileKey, fileID
+    //console.log('add local file test');
+    //extractor.initConnection(connection);
+    //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+    //extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
   });
+});
+
+app.post('/search', (req, res) => {
+  console.log('search');
 });
 
 MySQL.sequelize.sync().then(() => {
