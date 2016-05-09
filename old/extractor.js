@@ -350,6 +350,7 @@ module.exports = {
 
                             var query = InvertedIndex.findOneAndUpdate({keyword:value}, {$push: {vertex_ids: nodeID}},{upsert:true}).exec();
                             query.then(function(err, doc) {
+                                if(err) throw err;
                                 if(doc) {
                                     //console.log(doc['keyword']);
 

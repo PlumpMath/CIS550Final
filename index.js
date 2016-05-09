@@ -80,16 +80,16 @@ app.get('/', (req, res) => {
   //test
   // extractor.addFile(req.body);
 
-  // for s3: url, bucket, fileKey, fileID
-  console.log('add local file test');
-  extractor.initConnection(connection);
-  //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
-  extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
+  // // for s3: url, bucket, fileKey, fileID
+  // console.log('add local file test');
+  // extractor.initConnection(connection);
+  // //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+  // extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
 
-  // console.log('query from mongo test');
-  // var linker = new linkerModule.Linker();
+  console.log('query from mongo test');
+  var linker = new linkerModule.Linker();
     
-  // linker.searchQuery(['2013-08-09','BVB'], function(result){});
+  linker.searchQuery(['2013-08-09','2-4'], function(result){console.log(result)});
 })
 
 app.post('/file', (req, res) => {

@@ -59,9 +59,16 @@ module.exports = {
             //     }
             // });
 
-            InvertedIndex.findOne({'keyword': word}, 'vertex_ids').then(function(err, doc){
-                console.log(doc);
-                onLoaded(doc);
+            console.log(word);
+            InvertedIndex.findOne({'keyword': word}, 'vertex_ids', function(err, doc){
+                //console.log(doc);
+                if(err) throw err;
+
+                if(doc) {
+                    onLoaded(doc['vertex_ids']);
+                } else {
+                    onLoaded([]);
+                }
             });
 
             
