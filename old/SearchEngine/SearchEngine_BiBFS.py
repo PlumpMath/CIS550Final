@@ -1,6 +1,7 @@
 import sys
 import os
 import MySQLdb
+from pymongo import MongoClient
 
 class SearchEngine:
     """ Search engine for keywords searching"""
@@ -9,8 +10,9 @@ class SearchEngine:
     MYSQL_DB = os.environ.get('MYSQL_DB')
     MYSQL_USER = os.environ.get('MYSQL_USER')
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
+    MONGO_URL = os.environ.get('MONGO_URL')
     MAX_PASS_NUMBER = 20
-    OPT_MAX_PASS_NUMBER = True
+    OPT_MAX_PASS_NUMBER = False
 
     def __init__(self):
         self.nodeIDs_1 = {}
@@ -24,6 +26,9 @@ class SearchEngine:
         self.db = MySQLdb.connect(self.MYSQL_HOST, self.MYSQL_USER, self.MYSQL_PASSWORD, self.MYSQL_DB)
 
         self.cursor = self.db.cursor()
+
+        self.client = MongoClient(self.MONGO_URL)
+        self.mongodb = self.client['cis550']
         # print "connect with database"
 
     def DisconnectDatabase(self):
@@ -43,6 +48,18 @@ class SearchEngine:
         data = self.cursor.fetchall()
         for row in data:
             expansionList.add(row[0])
+
+        # # get isLeaf and keyword(value)
+        # sql = "select is_leaf,value from vertex where vertex_id= '%s'" % root
+        # self.cursor.execute(sql)
+        # data = self.cursor.fetchall()
+        
+        # if bool(data[0][0]):
+        #     # is leaf
+        #     value = data[0][1]
+        #     for post in self.mongodb.invertedindexes.find({'keyword':value}):
+        #         for vertexID in post['vertex_ids']:
+        #             expansionList.add(vertexID)
 
         return expansionList
 

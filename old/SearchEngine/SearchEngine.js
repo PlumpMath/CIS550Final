@@ -450,7 +450,7 @@ module.exports = {
 		        args: nodelist
 		    };
 
-		    pythonShell.run('SearchEngineWrapperForNodejs.py', options, function(err, result){
+		    pythonShell.run('./old/SearchEngine/SearchEngineWrapperForNodejs.py', options, function(err, result){
 		        if(err) throw err;
 
 		        var obj = JSON.parse(result);

@@ -142,6 +142,26 @@ createRawMySQLConnection();
 
 app.get('/', (req, res) => {
   res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
+
+
+  //test
+
+  // var extractor = new extractorModule.Extractor();
+  //   extractor.initConnection(connection);
+  //   extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
+  //   extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+
+  var linker = new linkerModule.Linker();
+    
+  linker.searchQuery(['BVB','FC Augsburg'], function(result){
+    var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
+    var searchEngine = new searchEngineModule.Search();
+    //console.log(result);
+
+    searchEngine.StartSearch(result, function(searchResult){
+        console.log(searchResult);
+    });
+  });
 });
 
 
@@ -207,14 +227,6 @@ app.post('/file', upload.single('file'), (req, res, next) => {
   });
 });
 
-app.post('/search', (req, res) => {
-  console.log('search');
-
-
-  var linker = new linkerModule.Linker();
-    
-  linker.searchQuery(['2013-08-09','2-4'], function(result){console.log(result)});
-});
 
 MySQL.sequelize.sync().then(() => {
   app.listen(APP_PORT, () => {
