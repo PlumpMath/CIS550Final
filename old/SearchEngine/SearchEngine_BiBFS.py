@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import sys
 import os
 import MySQLdb
+from pymongo import MongoClient
 
 class SearchEngine:
     """ Search engine for keywords searching"""
@@ -9,7 +11,8 @@ class SearchEngine:
     MYSQL_DB = os.environ.get('MYSQL_DB')
     MYSQL_USER = os.environ.get('MYSQL_USER')
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
-    MAX_PASS_NUMBER = 20
+    MONGO_URL = os.environ.get('MONGO_URL')
+    MAX_PASS_NUMBER = 10
     OPT_MAX_PASS_NUMBER = True
 
     def __init__(self):
@@ -21,9 +24,12 @@ class SearchEngine:
         #                          '12345678',
         #                          'datalake550')
         #call("cis550", shell=True , env=dict(ENV='~/.bash_profile'))
-        self.db = MySQLdb.connect(self.MYSQL_HOST, self.MYSQL_USER, self.MYSQL_PASSWORD, self.MYSQL_DB)
+        self.db = MySQLdb.connect(self.MYSQL_HOST, self.MYSQL_USER, self.MYSQL_PASSWORD, self.MYSQL_DB, charset='utf8')
 
         self.cursor = self.db.cursor()
+
+        self.client = MongoClient(self.MONGO_URL)
+        self.mongodb = self.client['cis550']
         # print "connect with database"
 
     def DisconnectDatabase(self):
@@ -43,6 +49,18 @@ class SearchEngine:
         data = self.cursor.fetchall()
         for row in data:
             expansionList.add(row[0])
+
+        # get isLeaf and keyword(value)
+        sql = "select is_leaf,value from vertex where vertex_id= '%s'" % root
+        self.cursor.execute(sql)
+        data = self.cursor.fetchall()
+        
+        if bool(data[0][0]):
+            # is leaf
+            value = (data[0][1])#.decode('ascii').encode('utf8')
+            for post in self.mongodb.invertedindexes.find({'keyword':value}):
+                for vertexID in post['vertex_ids']:
+                    expansionList.add(vertexID)
 
         return expansionList
 
@@ -207,6 +225,8 @@ class SearchEngine:
         nodeInQueueMap1 = {}
         nodeInQueueMap2 = {}
 
+        pathUniqueHash = set()
+
         # initialize first search
         for id in self.nodeIDs_1:
             hashNode1.add(id)
@@ -227,7 +247,7 @@ class SearchEngine:
             # expand search_1
             expansionList1 = self.GetExpansionList(queue1[head1]["vertex_id"])
             for newID in expansionList1:
-                if newID in hashNode2: # found pass throuhg 1->2
+                if newID in hashNode2 and newID not in hashNode1: # found pass throuhg 1->2
                     resultPath = []
 
                     tmp = head1
@@ -242,7 +262,10 @@ class SearchEngine:
                         resultPath.append(self.CreatePathNode(queue2[tmp]))
                         tmp = queue2[tmp]["prev"]
 
-                    resultPaths.append(resultPath)
+                    if resultPath[0]["vertex_id"] not in pathUniqueHash:
+                        pathUniqueHash.add(resultPath[0]["vertex_id"])
+                        resultPaths.append(resultPath)
+
                     if self.OPT_MAX_PASS_NUMBER == True and len(resultPaths) >= self.MAX_PASS_NUMBER:
                         return resultPaths
 
@@ -257,7 +280,7 @@ class SearchEngine:
             # expand search_2
             expansionList2 = self.GetExpansionList(queue2[head2]["vertex_id"])
             for newID in expansionList2:
-                if newID in hashNode1: # found pass throuhg 2->1
+                if newID in hashNode1 and newID not in hashNode2: # found pass throuhg 2->1
                     resultPath = []
 
                     tmp = nodeInQueueMap1[newID]
@@ -272,7 +295,10 @@ class SearchEngine:
                         resultPath.append(self.CreatePathNode(queue2[tmp]))
                         tmp = queue2[tmp]["prev"]
 
-                    resultPaths.append(resultPath)
+                    if resultPath[0]["vertex_id"] not in pathUniqueHash:
+                        pathUniqueHash.add(resultPath[0]["vertex_id"])
+                        resultPaths.append(resultPath)
+
                     if self.OPT_MAX_PASS_NUMBER == True and len(resultPaths) >= self.MAX_PASS_NUMBER:
                         return resultPaths
 

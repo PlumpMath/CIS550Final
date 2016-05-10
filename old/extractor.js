@@ -109,6 +109,7 @@ module.exports = {
             var params = {Bucket: bucket, Key: fileKey};
             var file = fs.createWriteStream('./tmp/' + fileKey);
             s3.getObject(params).createReadStream().pipe(file);
+
             
             
             // extract the file content to json

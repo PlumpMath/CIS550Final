@@ -427,7 +427,8 @@ module.exports = {
 			            var tmp = [];
 			            for(var j=0;j<result[i].length;j++)
 			            {
-			                tmp.push(result[i][j]["vertex_id"]);
+			                //tmp.push(result[i][j]["vertex_id"]);
+			                tmp.push(result[i][j]);
 			            }
 			            nodelist.push(tmp);
 			        }
@@ -450,7 +451,7 @@ module.exports = {
 		        args: nodelist
 		    };
 
-		    pythonShell.run('SearchEngineWrapperForNodejs.py', options, function(err, result){
+		    pythonShell.run('./old/SearchEngine/SearchEngineWrapperForNodejs.py', options, function(err, result){
 		        if(err) throw err;
 
 		        var obj = JSON.parse(result);
