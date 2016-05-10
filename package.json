@@ -27,6 +27,7 @@
     "passport-local-mongoose": "^4.0.0",
     "path": "^0.12.7",
     "pug": "^2.0.0-alpha6",
+    "python-shell": "^0.4.0",
     "ramda": "^0.21.0",
     "sequelize": "^3.23.0",
     "valid-url": "^1.0.9",
