@@ -205,31 +205,25 @@ app.post('/search', (req, res) => {
 
     var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
     var searchEngine = new searchEngineModule.Search();
-    
-    console.log('\n\n\n\n\n\n\n', result, '\n\n\n\n\n\n\n');
 
     searchEngine.StartSearch(result, function(searchResult){
       console.log(searchResult);
 
-      var nodes = [];
-      var edges = [];
-      for(var i=0;i<1;i++)
-      {
-          for(var j=0;j<searchResult[i].length;j++)
-          {
-              nodes.push({id: searchResult[i][j]["vertex_id"],
-                          label: searchResult[i][j]["value"]});
-              if(j != 0)
-              {
-                  edges.push({from: searchResult[i][j-1]["vertex_id"],
-                              to: searchResult[i][j]["vertex_id"]});
+      var data = [];
+      
+      for(var i=0;i<searchResult.length;i++) {
+        var nodes = [];
+        var edges = [];
+        for(var j=0;j<searchResult[i].length;j++) {
+              nodes.push({id: searchResult[i][j]["vertex_id"], label: searchResult[i][j]["value"]});
+              if(j != 0) {
+                  edges.push({from: searchResult[i][j-1]["vertex_id"], to: searchResult[i][j]["vertex_id"]});
               }
-          }
-      }
-
-      const data = {
-        nodes: nodes,
-        edges: edges
+        }
+        data.push({
+          nodes: nodes,
+          edges: edges
+        })
       }
 
       res.render('search', {query: query, data: data});
