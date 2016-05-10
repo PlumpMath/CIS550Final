@@ -200,6 +200,25 @@ app.post('/search', (req, res) => {
 
   var linkerModule = require('./old/linker.js');
   var linker = new linkerModule.Linker();
+
+
+  function hashCode(str) { // java String#hashCode
+      var hash = 0;
+      for (var i = 0; i < str.length; i++) {
+         hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+      return hash;
+  } 
+
+  function intToRGB(i){
+      var c = (i & 0x00FFFFFF)
+          .toString(16)
+          .toUpperCase();
+
+      return '#' + ("00000".substring(0, 6 - c.length) + c);
+  }
+
+
  
   linker.searchQuery(keywords, function(result) {
 
@@ -210,12 +229,21 @@ app.post('/search', (req, res) => {
       console.log(searchResult);
 
       var data = [];
+
+      // color for each fileID
+      var color_schema
       
       for(var i=0;i<searchResult.length;i++) {
         var nodes = [];
         var edges = [];
         for(var j=0;j<searchResult[i].length;j++) {
-              nodes.push({id: searchResult[i][j]["vertex_id"], label: searchResult[i][j]["value"]});
+              var c = intToRGB(hashCode(searchResult[i][j]['file_id']));
+                //console.log(c);
+              nodes.push({
+                id: searchResult[i][j]["vertex_id"]
+                , label: searchResult[i][j]["value"]
+                , color: c
+              });
               if(j != 0) {
                   edges.push({from: searchResult[i][j-1]["vertex_id"], to: searchResult[i][j]["vertex_id"]});
               }

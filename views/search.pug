@@ -7,10 +7,16 @@ block content
     h2 Results
     h4= query
     each val, index in data
-        div(id="mynetwork_" + index, style="width: 600px; height: 400px; border: 1px solid lightgray;")
+        p= "" + index
+        div(id=index, style="width: 600px; height: 400px; border: 1px solid lightgray;")
         hr
         script.
-            var container = document.getElementById('mynetwork_' + index);
+            var element_id = !{JSON.stringify(index)};      
+            console.log(!{JSON.stringify(index)})
+            var container = document.getElementById(element_id);
+
+            console.log(container);
+
             var options = {};
 
             var nodes = new vis.DataSet(!{JSON.stringify(val.nodes)});
