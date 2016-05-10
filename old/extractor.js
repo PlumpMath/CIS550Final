@@ -1,3 +1,4 @@
+var AWS = require("aws-sdk");
 var fs = require("fs");
 var csv2JsonConverter = require("csvtojson").Converter;
 var xml2JsonParseString = require("xml2js").parseString;
@@ -99,12 +100,15 @@ module.exports = {
         
         var extractJsonFromFile = function (url, bucket, fileKey, onload) {
 
-            // download the file from S3
+
+            console.log('HERE');
+
+            // // download the file from S3
             var s3 = new AWS.S3();
             
             var params = {Bucket: bucket, Key: fileKey};
-            var file = fs.createWriteStream(url);
-            s3.getObject(params).createReadStream.pipe(file);
+            var file = fs.createWriteStream('./tmp/' + fileKey);
+            s3.getObject(params).createReadStream().pipe(file);
             
             
             // extract the file content to json
@@ -333,16 +337,16 @@ module.exports = {
                                 if(doc) {
                                     //console.log(doc['keyword']);
 
-                                    for(i in doc['vertex_ids']) {
-                                        //console.log(doc['vertex_ids'][i]);
+                                    // for(i in doc['vertex_ids']) {
+                                    //     //console.log(doc['vertex_ids'][i]);
 
-                                        connection.query('INSERT INTO edge SET ?', 
-                                        {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
-                                        function(err, result){
-                                            //TODO
-                                            if(err) throw err;
-                                        });
-                                    }
+                                    //     connection.query('INSERT INTO edge SET ?', 
+                                    //     {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
+                                    //     function(err, result){
+                                    //         //TODO
+                                    //         if(err) throw err;
+                                    //     });
+                                    // }
                                 }
 
                                 

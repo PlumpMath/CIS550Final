@@ -51,9 +51,27 @@ const getDateTime = () => {
   var day  = date.getDate();
   day = (day < 10 ? "0" : "") + day;
 
-  return year + ":" + month + ":" + day + ":" + hour + ":" + min + ":" + sec;
+  return year + "-" + month + "-" + day + "-" + hour + "-" + min + "-" + sec;
 
 }
+
+function createRawMySQLConnection()
+{
+  const mysql = require('mysql');
+
+  // connection  = mysql.createConnection({
+  //     host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+  //     user     : 'shrekshao',
+  //     password : '12345678',
+  //     database : 'datalake550'
+  // });
+  return mysql.createConnection({
+      host     : MYSQL_HOST,
+      user     : MYSQL_USER,
+      password : MYSQL_PASSWORD,
+      database : MYSQL_DB
+  });
+} 
 
 const app = express();
 const s3 = new AWS.S3({ });
@@ -102,57 +120,22 @@ mongoose.connect(MONGO_URL);
 
 const mongodb = mongoose.connection;
 
+mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
+mongodb.once('open', () => {
+	console.log('Connected to', MONGO_URL);
+});
 
 const extractorModule = require('./old/extractor.js');
 
 const linkerModule = require('./old/linker.js');
 
 
-
-
-mongodb.on('error', console.error.bind(console, 'MongoDB connection error:'));
-mongodb.once('open', () => {
-	console.log('Connected to', MONGO_URL);
-});
-
-
-
-var connection;
-function createRawMySQLConnection()
-{
-  var mysql = require('mysql');
-
-  // connection  = mysql.createConnection({
-  //     host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-  //     user     : 'shrekshao',
-  //     password : '12345678',
-  //     database : 'datalake550'
-  // });
-  connection  = mysql.createConnection({
-      host     : process.env.MYSQL_HOST,
-      user     : process.env.MYSQL_USER,
-      password : process.env.MYSQL_PASSWORD,
-      database : process.env.MYSQL_DB
-  });
-
-  connection.connect();
-} 
-createRawMySQLConnection();
-
-
-app.get('/', (req, res) => {
-  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
-});
-
-
 app.get('/', (req, res) => {
   res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake', user: req.user });
 });
 
-
 app.get('/register', (req, res) => {
   res.render('register', { });
-
 })
 
 app.post('/register', (req, res) => {
@@ -192,28 +175,23 @@ app.get('/logout', (req, res) => {
 app.post('/file', upload.single('file'), (req, res, next) => {
   
   const filePromise = File.create({ 
+    key: req.file.key,
     url: req.file.location,
     user_id: req.user._id
   });
 
   filePromise.then((doc) => {
-    console.log(doc);
+    const connection = createRawMySQLConnection();
+    const extractor = new extractorModule.Extractor();
 
-    // for s3: url, bucket, fileKey, fileID
-    console.log('extract');
+    connection.connect();
+
     extractor.initConnection(connection);
-    extractor.addFile('./tmp/'+req.file.location, AWS_S3_BUCKET, req.file.location, 'file-1');
-    //extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
+    extractor.addFile(req.file.location, AWS_S3_BUCKET, req.file.key, doc._id);
+
   });
-});
 
-app.post('/search', (req, res) => {
-  console.log('search');
-
-
-  var linker = new linkerModule.Linker();
-    
-  linker.searchQuery(['2013-08-09','2-4'], function(result){console.log(result)});
+  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake', user: req.user });  
 });
 
 MySQL.sequelize.sync().then(() => {
