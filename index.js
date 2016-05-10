@@ -155,18 +155,18 @@ app.get('/', (req, res) => {
     // extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
 
 
-  // var linker = new linkerModule.Linker();
+  var linker = new linkerModule.Linker();
     
-  // //linker.searchQuery(['Arsenal','LIV'], function(result){
-  // linker.searchQuery(['BVB','FC Augsburg'], function(result){
-  //   var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
-  //   var searchEngine = new searchEngineModule.Search();
-  //   //console.log(result);
+  //linker.searchQuery(['Arsenal','LIV'], function(result){
+  linker.searchQuery(['BVB','FC Augsburg'], function(result){
+    var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
+    var searchEngine = new searchEngineModule.Search();
+    //console.log(result);
 
-  //   searchEngine.StartSearch(result, function(searchResult){
-  //       console.log(searchResult);
-  //   });
-  // });
+    searchEngine.StartSearch(result, function(searchResult){
+        console.log(searchResult);
+    });
+  });
 });
 
 

@@ -12,8 +12,8 @@ class SearchEngine:
     MYSQL_USER = os.environ.get('MYSQL_USER')
     MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD')
     MONGO_URL = os.environ.get('MONGO_URL')
-    MAX_PASS_NUMBER = 20
-    OPT_MAX_PASS_NUMBER = False
+    MAX_PASS_NUMBER = 10
+    OPT_MAX_PASS_NUMBER = True
 
     def __init__(self):
         self.nodeIDs_1 = {}
@@ -57,7 +57,7 @@ class SearchEngine:
         
         if bool(data[0][0]):
             # is leaf
-            value = (data[0][1]).decode('ascii').encode('utf8')
+            value = (data[0][1])#.decode('ascii').encode('utf8')
             for post in self.mongodb.invertedindexes.find({'keyword':value}):
                 for vertexID in post['vertex_ids']:
                     expansionList.add(vertexID)
