@@ -196,7 +196,7 @@ app.post('/search', (req, res) => {
     res.render('index', { title: 'CIS550 Datalake', message2: 'Please only enter one or two keywords!', user: req.user });  
   }
 
-  console.log('\n\n\n\n\n\n', keywords, '\n\n\n\n\n\n');
+  const query = keywords[0] + '->' + keywords[1];
 
   var linkerModule = require('./old/linker.js');
   var linker = new linkerModule.Linker();
