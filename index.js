@@ -185,16 +185,18 @@ app.post('/file', upload.single('file'), (req, res, next) => {
 
   });
 
-  res.render('index', { title: 'CIS550 Datalake', message: 'File uploaded!', user: req.user });  
+  res.render('index', { title: 'CIS550 Datalake', message1: 'File uploaded!', user: req.user });  
 });
 
 app.post('/search', (req, res) => {
   
-  const keywords = R.split(',', req.body.keywords);
+  const keywords = R.map(R.trim, R.split(',', req.body.keywords));
 
   if (R.length(keywords) > 2) {
-    res.render('index', { title: 'CIS550 Datalake', message: 'Please only enter one or two keywords!', user: req.user });  
+    res.render('index', { title: 'CIS550 Datalake', message2: 'Please only enter one or two keywords!', user: req.user });  
   }
+
+  console.log('\n\n\n\n\n\n', keywords, '\n\n\n\n\n\n');
 
   var linkerModule = require('./old/linker.js');
   var linker = new linkerModule.Linker();
@@ -203,10 +205,11 @@ app.post('/search', (req, res) => {
 
     var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
     var searchEngine = new searchEngineModule.Search();
-    //console.log(result);
+    
+    console.log('\n\n\n\n\n\n\n', result, '\n\n\n\n\n\n\n');
 
     searchEngine.StartSearch(result, function(searchResult){
-      //console.log(searchResult);
+      console.log(searchResult);
 
       var nodes = [];
       var edges = [];
