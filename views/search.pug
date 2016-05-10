@@ -1,0 +1,19 @@
+extends layout
+
+block content
+    h1 Welcome to CIS550 Datalake
+    h3 Anthony Janocko, Karan Hiremath, Shuai Shao, Zimyang
+    hr
+    h2 Results
+    h4= query
+    div(id="mynetwork", style="width: 600px; height: 400px; border: 1px solid lightgray;")
+    script.
+        var container = document.getElementById('mynetwork');
+        var options = {};
+
+        var nodes = new vis.DataSet(!{JSON.stringify(data.nodes)});
+        var edges = new vis.DataSet(!{JSON.stringify(data.edges)});
+
+        var data = {nodes: nodes, edges: edges};
+
+        var network = new vis.Network(container, data, options);

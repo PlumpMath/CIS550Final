@@ -59,12 +59,6 @@ function createRawMySQLConnection()
 {
   const mysql = require('mysql');
 
-  // connection  = mysql.createConnection({
-  //     host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-  //     user     : 'shrekshao',
-  //     password : '12345678',
-  //     database : 'datalake550'
-  // });
   return mysql.createConnection({
       host     : MYSQL_HOST,
       user     : MYSQL_USER,
@@ -131,7 +125,7 @@ const linkerModule = require('./old/linker.js');
 
 
 app.get('/', (req, res) => {
-  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake', user: req.user });
+  res.render('index', { title: 'CIS550 Datalake', user: req.user });
 });
 
 app.get('/register', (req, res) => {
@@ -191,8 +185,54 @@ app.post('/file', upload.single('file'), (req, res, next) => {
 
   });
 
-  res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake', user: req.user });  
+  res.render('index', { title: 'CIS550 Datalake', message: 'File uploaded!', user: req.user });  
 });
+
+app.post('/search', (req, res) => {
+  
+  const keywords = R.split(',', req.body.keywords);
+
+  if (R.length(keywords) > 2) {
+    res.render('index', { title: 'CIS550 Datalake', message: 'Please only enter one or two keywords!', user: req.user });  
+  }
+
+  var linkerModule = require('./old/linker.js');
+  var linker = new linkerModule.Linker();
+ 
+  linker.searchQuery(keywords, function(result) {
+
+    var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
+    var searchEngine = new searchEngineModule.Search();
+    //console.log(result);
+
+    searchEngine.StartSearch(result, function(searchResult){
+      //console.log(searchResult);
+
+      var nodes = [];
+      var edges = [];
+      for(var i=0;i<1;i++)
+      {
+          for(var j=0;j<searchResult[i].length;j++)
+          {
+              nodes.push({id: searchResult[i][j]["vertex_id"],
+                          label: searchResult[i][j]["value"]});
+              if(j != 0)
+              {
+                  edges.push({from: searchResult[i][j-1]["vertex_id"],
+                              to: searchResult[i][j]["vertex_id"]});
+              }
+          }
+      }
+
+      const data = {
+        nodes: nodes,
+        edges: edges
+      }
+
+      res.render('search', {query: query, data: data});
+    });
+  });
+})
 
 MySQL.sequelize.sync().then(() => {
   app.listen(APP_PORT, () => {
