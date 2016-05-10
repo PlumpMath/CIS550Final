@@ -297,7 +297,7 @@ module.exports = {
 					var searchEngine = new module.exports.SearchEngine();
 					searchEngine.Init(connection);
 
-					searchEngine.SearchKeys([result[i]["vertex_id"]], function(result_keys){
+					searchEngine.SearchKeys([result[i]], function(result_keys){
 
 						// PrintSearchResult(result_keys);
 
