@@ -427,7 +427,8 @@ module.exports = {
 			            var tmp = [];
 			            for(var j=0;j<result[i].length;j++)
 			            {
-			                tmp.push(result[i][j]["vertex_id"]);
+			                //tmp.push(result[i][j]["vertex_id"]);
+			                tmp.push(result[i][j]);
 			            }
 			            nodelist.push(tmp);
 			        }

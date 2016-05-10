@@ -146,22 +146,27 @@ app.get('/', (req, res) => {
 
   //test
 
-  // var extractor = new extractorModule.Extractor();
-  //   extractor.initConnection(connection);
-  //   extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
-  //   extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+  var extractor = new extractorModule.Extractor();
+    // extractor.initConnection(connection);
+    // //extractor.addFile('./old/test-data/1-premierleague.csv', null, null, 'file-2');
+    // //extractor.addFile('./old/test-data/en.1.clubs.json', null, null, 'file-1');
 
-  var linker = new linkerModule.Linker();
+    // extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
+    // extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+
+
+  // var linker = new linkerModule.Linker();
     
-  linker.searchQuery(['BVB','FC Augsburg'], function(result){
-    var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
-    var searchEngine = new searchEngineModule.Search();
-    //console.log(result);
+  // //linker.searchQuery(['Arsenal','LIV'], function(result){
+  // linker.searchQuery(['BVB','FC Augsburg'], function(result){
+  //   var searchEngineModule = require('./old/SearchEngine/SearchEngine.js');
+  //   var searchEngine = new searchEngineModule.Search();
+  //   //console.log(result);
 
-    searchEngine.StartSearch(result, function(searchResult){
-        console.log(searchResult);
-    });
-  });
+  //   searchEngine.StartSearch(result, function(searchResult){
+  //       console.log(searchResult);
+  //   });
+  // });
 });
 
 

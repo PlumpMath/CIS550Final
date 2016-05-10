@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import sys
 import os
 import MySQLdb
@@ -49,17 +50,17 @@ class SearchEngine:
         for row in data:
             expansionList.add(row[0])
 
-        # # get isLeaf and keyword(value)
-        # sql = "select is_leaf,value from vertex where vertex_id= '%s'" % root
-        # self.cursor.execute(sql)
-        # data = self.cursor.fetchall()
+        # get isLeaf and keyword(value)
+        sql = "select is_leaf,value from vertex where vertex_id= '%s'" % root
+        self.cursor.execute(sql)
+        data = self.cursor.fetchall()
         
-        # if bool(data[0][0]):
-        #     # is leaf
-        #     value = data[0][1]
-        #     for post in self.mongodb.invertedindexes.find({'keyword':value}):
-        #         for vertexID in post['vertex_ids']:
-        #             expansionList.add(vertexID)
+        if bool(data[0][0]):
+            # is leaf
+            value = (data[0][1]).decode('ascii').encode('utf8')
+            for post in self.mongodb.invertedindexes.find({'keyword':value}):
+                for vertexID in post['vertex_ids']:
+                    expansionList.add(vertexID)
 
         return expansionList
 

@@ -19,9 +19,9 @@ nodeList = []
 for index in [1, 2]:
     nodeList.append(argv[index].split(','))
 
-# paths = []
-# paths.append(nodeList[0])
-# paths.append(nodeList[1])
+paths = []
+paths.append(nodeList[0])
+paths.append(nodeList[1])
 
 # call SearchEngine
 searchEngine = SearchEngine()
