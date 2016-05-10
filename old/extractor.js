@@ -1,3 +1,4 @@
+var AWS = require("aws-sdk");
 var fs = require("fs");
 var csv2JsonConverter = require("csvtojson").Converter;
 var xml2JsonParseString = require("xml2js").parseString;
@@ -22,83 +23,92 @@ module.exports = {
 //var Extractor = Extractor || {};
 
     //globalRootID : new Buffer(16),
-    globalRootID : '',
+    //globalRootID : '',
 
 
-    readGlobalRootID : function (globalRootIDFilename) {
-        var fs = require('fs');
-        fs.readFile(globalRootIDFilename, 'utf-8', function(err, data) {
-            if(!err) {
-                module.exports.globalRootID = data;
-                console.log(module.exports.globalRootID);
-            }
-        });
-    },
+    // readGlobalRootID : function (globalRootIDFilename) {
+    //     var fs = require('fs');
+    //     fs.readFile(globalRootIDFilename, 'utf-8', function(err, data) {
+    //         if(!err) {
+    //             module.exports.globalRootID = data;
+    //             console.log(module.exports.globalRootID);
+    //         }
+    //     });
+    // },
 
-    initDatalake : function (globalRootIDFilename) {
-        var uuid = require('node-uuid');
-        // insert the global RootID to the vertex table
-        //uuid.v4(null, module.exports.globalRootID, 0);
+    // initDatalake : function (globalRootIDFilename) {
+    //     var uuid = require('node-uuid');
+    //     // insert the global RootID to the vertex table
+    //     //uuid.v4(null, module.exports.globalRootID, 0);
         
-        module.exports.globalRootID = uuid.v4();
-        //console.log(module.exports.globalRootID);
-        module.exports.globalRootID = module.exports.globalRootID.replace(/-/g,'');
+    //     module.exports.globalRootID = uuid.v4();
+    //     //console.log(module.exports.globalRootID);
+    //     module.exports.globalRootID = module.exports.globalRootID.replace(/-/g,'');
 
-        console.log(module.exports.globalRootID);
-        // TODO: store global root id in a file somewhere
+    //     console.log(module.exports.globalRootID);
+    //     // TODO: store global root id in a file somewhere
         
-        var fs = require('fs');
-        fs.writeFile(globalRootIDFilename, module.exports.globalRootID);
+    //     var fs = require('fs');
+    //     fs.writeFile(globalRootIDFilename, module.exports.globalRootID);
         
         
-        // // var id = module.exports.globalRootID;
+    //     // // var id = module.exports.globalRootID;
         
-        // temp connection
-        // temp test
-        var mysql = require('mysql');
-        var connection = mysql.createConnection({
-            host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
-            user     : 'shrekshao',
-            password : '12345678',
-            database : 'datalake550'
-        });
+    //     // temp connection
+    //     // temp test
+    //     var mysql = require('mysql');
+    //     var connection = mysql.createConnection({
+    //         host     : 'datalake550.chyq7der4m33.us-east-1.rds.amazonaws.com',
+    //         user     : 'shrekshao',
+    //         password : '12345678',
+    //         database : 'datalake550'
+    //     });
         
-        connection.connect(function(err) {
-            if(!err) {
-                var root = {
-                    'node_id': module.exports.globalRootID
-                    ,'parent_id': null
-                    ,'value': 'datalake-root'
-                    ,'is_leaf': false
-                    ,'file_id': 'root'
-                };
-                connection.query('INSERT INTO vertex SET ?', root, function(err, result){
-                    if(err) {
-                        throw err;
-                    }                    
-                });
+    //     connection.connect(function(err) {
+    //         if(!err) {
+    //             var root = {
+    //                 'node_id': module.exports.globalRootID
+    //                 ,'parent_id': null
+    //                 ,'value': 'datalake-root'
+    //                 ,'is_leaf': false
+    //                 ,'file_id': 'root'
+    //             };
+    //             connection.query('INSERT INTO vertex SET ?', root, function(err, result){
+    //                 if(err) {
+    //                     throw err;
+    //                 }                    
+    //             });
                 
-                connection.end();
-            } else {
-                throw err;
-            }
-        });
+    //             connection.end();
+    //         } else {
+    //             throw err;
+    //         }
+    //     });
         
-    }
-    ,
+    // }
+    // ,
 
     Extractor : function () {
 
+        var connection;
+
+        function initConnection(conn) {
+            connection = conn;
+        }
+        
          
         
         var extractJsonFromFile = function (url, bucket, fileKey, onload) {
 
+
+            console.log('HERE');
+
             // // download the file from S3
-            // var s3 = new AWS.S3();
+            var s3 = new AWS.S3();
             
-            // var params = {Bucket: bucket, Key: fileKey};
-            // var file = fs.createWriteStream(url);
-            // s3.getObject(params).createReadStream.pipe(file);
+            var params = {Bucket: bucket, Key: fileKey};
+            var file = fs.createWriteStream('./tmp/' + fileKey);
+            s3.getObject(params).createReadStream().pipe(file);
             
             
             // extract the file content to json
@@ -162,6 +172,7 @@ module.exports = {
         
         
         // expose as public for test
+        this.initConnection = initConnection;
         this.extractJsonFromFile = extractJsonFromFile;
         this.jsonKeyValuePairParser = jsonKeyValuePairParser;
         
@@ -172,71 +183,50 @@ module.exports = {
         // * delete file batch
         
         this.addFile = function(url, bucket, fileKey, fileID) {
-                    
+            
+            var mongooseQueries = [];
+
             extractJsonFromFile(url, bucket, fileKey, function(json, rootString) {
 
                 jsonKeyValuePairParser(json, rootString, function(value, nodeString, nodeID, parentID, isLeaf) {
-                    // var vertex;
                     
-                    // vertex = {
-                    //     'node_id': nodeID
-                    //     ,'parent_id': parentID
+                    
+
+                    // // insert to Vertices, Edges
+                    // MySQL.Vertex.create({
+                    //     'vertex_id': nodeID
+                    //     //,'parent_id': parentID
                     //     ,'value': isLeaf ? value : nodeString
                     //     ,'is_leaf': isLeaf
                     //     ,'file_id': fileID
-                    // };
-                    
-                    // // update Inverted Index
-                    // function updateInvertedIndex(db, leaf, callback) {
-                    //     // if(!leaf) {
-                    //     //     callback();
-                    //     // } else {
-                    //         db.collection('inverted_index').update(
-                    //             {'_id' : value},
-                    //             {$push : {'node_ids': nodeID}},
-                    //             {upsert: true},
-                    //             function(err, object)
-                    //             {
-                    //                 if(err) throw err;
-                                    
-                    //                 callback();
-                    //             }
-                    //         );
-                    //     // }
+
+                    //     //,Edge: {'vertex_id_1': nodeID, 'vertex_id_2': parentID}
+                    // }).then(function(vertex){
+                    //     //MySQL.Edge.create({'vertex_id_1': parentID, 'vertex_id_2': nodeID});
+                    //     //vertex.addEdge
+                    //     //console.log(vertex);
+                    //     vertex.setEdge({'vertex_id_2': parentID});
+                    // });
+
+
+                    // // connect all vertex sharing the same keyword (mongoose search)
+                    // //var invertedIndex = mongoose.model('InvertedIndex');
+
+                    // var promise = InvertedIndex.findOne({keyword: value}, 'vertex_ids').exec();
+
+                    // promise.then(function(keyword){
+                    //     // insert edges to Edges (mysql)
+                    //     var edges = [];
+
+                    //     for (i in keyword.vertex_ids) {
+                    //         edges.push(Edge.create({'vertex_id_1': keywords.vertex_ids[i], 'vertex_id_2': nodeID}));
+                    //     }
                         
-                    // }
+                    //     // update the inverted index (mongodb)
 
-
-                    // insert to Vertices, Edges
-                    MySQL.Vertex.create({
-                        'vertex_id': nodeID
-                        //,'parent_id': parentID
-                        ,'value': isLeaf ? value : nodeString
-                        ,'is_leaf': isLeaf
-                        ,'file_id': fileID
-                    }).then(function(vertex){
-                        //Edge.create({'vertex_id_1': parentID, 'vertex_id_2': nodeID});
-                    });
-
-
-                    // connect all vertex sharing the same keyword (mongoose search)
-                    //var invertedIndex = mongoose.model('InvertedIndex');
-
-                    var promise = InvertedIndex.findOne({keyword: value}, 'vertex_ids').exec();
-
-                    promise.then(function(keyword){
-                        // insert edges to Edges (mysql)
-                        var edges = [];
-
-                        for (i in keyword.vertex_ids) {
-                            edges.push(Edge.create({'vertex_id_1': keywords.vertex_ids[i], 'vertex_id_2': nodeID}));
-                        }
-                        
-                        // update the inverted index (mongodb)
-
-                    }).then(function(keyword){
-                        keyword.vertex_ids.push(nodeID);
-                    });
+                    // }).then(function(keyword){
+                    //     keyword.vertex_ids.push(nodeID);
+                    // });
 
 
                     //invertedIndex.findOneAndUpdate({keyword:value}, {$push: nodeID}, {new: true, upsert:true});
@@ -248,98 +238,175 @@ module.exports = {
 
 
 
-                    //------obsolete----------------
+                    //------old----------------
+
+                    var vertex;
+                    
+                    vertex = {
+                        'vertex_id': nodeID
+                        ,'parent_id': parentID
+                        ,'value': isLeaf ? value : nodeString
+                        ,'is_leaf': isLeaf
+                        ,'file_id': fileID
+                    };
+
+
+                    // // update Inverted Index
+                    // function updateInvertedIndex(db, leaf, callback) {
+
+                    //     // db.collection('inverted_index').update(
+                    //     //     {'_id' : value},
+                    //     //     {$push : {'node_ids': nodeID}},
+                    //     //     {upsert: true},
+                    //     //     function(err, object)
+                    //     //     {
+                    //     //         if(err) throw err;
+                                
+                    //     //         callback();
+                    //     //     }
+                    //     // );
+                        
+                    // }
 
                     // // use keyword find all nodeID
                     // function findNodeIDWithKeyword(db, leaf, callback) {
-                    //     // if(!leaf) {
-                    //     //     callback();
-                    //     // } else {
-                    //         var cursor = db.collection('inverted_index').find(
-                    //             {'keyword' : value}
-                    //         );
+                    //     var cursor = db.collection('inverted_index').find(
+                    //         {'keyword' : value}
+                    //     );
+                        
+                    //     cursor.each(function(err, doc){
+                    //         if(err) throw err;
                             
-                    //         cursor.each(function(err, doc){
-                    //             if(err) throw err;
+                    //         if( doc!=null ) {
+                    //             // for each in this array
+                    //             // TODO : connect each nodeID in the list with this nodeID
+                    //             // insert to edge table
+                    //             console.log(doc);
                                 
-                    //             if( doc!=null ) {
-                    //                 // for each in this array
-                    //                 // TODO : connect each nodeID in the list with this nodeID
-                    //                 // insert to edge table
-                    //                 console.log(doc);
-                                    
-                    //                 for(i in doc) {
-                    //                     connection.query('INSERT INTO edge SET ?', 
-                    //                     {'node_id_1': nodeID, 'node_id_2': doc[i]},
-                    //                     function(err, result){
-                    //                         //TODO
-                    //                         if(err) throw err;
-                    //                     });
-                    //                 }
+                    //             for(i in doc) {
+                    //                 connection.query('INSERT INTO edge SET ?', 
+                    //                 {'vertex_id_1': nodeID, 'vertex_id_2': doc[i]},
+                    //                 function(err, result){
+                    //                     //TODO
+                    //                     if(err) throw err;
+                    //                 });
                     //             }
-                                
-                                
-                    //             callback(doc);
-                    //         });
-                    //     // }
+                    //         }
+                            
+                            
+                    //         callback(doc);
+                    //     });
                     // }
                     
                     
-                    // connection.query('INSERT INTO vertex SET ?', vertex, function(err, result){
-                    //     //TODO
-                    //     if(err !== null) {
-                    //         console.log('Inserting: ---log: ', vertex, err, result);
-                    //     } else {
-                            
-                    //         // insert parent-child edge
-                    //         if (typeof parentID !== 'undefined'
-                    //             && parentID != module.exports.globalRootID) {
-                    //             var edgeNodes = {'node_id_1': parentID, 'node_id_2': nodeID};
-                    //             //insertQuery = mysql.format(insertQuery, edgeNodes);
-                    //             connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
-                    //                 //TODO
-                    //                 if(err) throw err;
-                    //             });
-                                
-                    //         }
-                            
-                    //     }
-                        
-                    // });
-                    
-                    
-                    //if(isLeaf) {
-                        // // insert edge connecting nodes sharing the same keyword
-                        // mongoClient.connect('mongodb://localhost:27017/datalake', function(err, db) {
-                        //     if(err) throw err;
-                            
-                        //     findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
-                                
-                        //         // for (i in nodeIDs) {
-                        //         //     //var edge = ;
-                                    
-                        //         //     connection.query('INSERT INTO edge SET ?', 
-                        //         //     {'node_id_1': nodeID, 'node_id_2': nodeIDs[i]},
-                        //         //     function(err, result){
-                        //         //         //TODO
-                        //         //         if(err) throw err;
-                        //         //     });
-                        //         // }
-                                
-                        //         updateInvertedIndex(db, isLeaf, function(){});
-                        //     });
-                            
-                        // });
-                    //}
-                    
-                    
-                    //insertSQL('vertex', vertex);
-                    
-                    //connection.end();
-                    
+                    connection.query('INSERT INTO vertex SET ?', vertex, function(err, result){
+                        //TODO
+                        if(err) throw err;
 
-                    // TODO: update
-                    // update inverted index on each insert? or timely updated
+
+                        
+                    });
+                    
+                    
+                    // insert parent-child edge
+                        // if (typeof parentID !== 'undefined'
+                        //     && parentID != module.exports.globalRootID) {
+                        if( parentID ) {
+                            //console.log (parentID);
+
+                            var edgeNodes = {'vertex_id_1':  nodeID, 'vertex_id_2': parentID};
+                            //insertQuery = mysql.format(insertQuery, edgeNodes);
+                            connection.query('INSERT INTO edge SET ?', edgeNodes, function(err, result){
+                                //TODO
+                                //console.log(result);
+                                if(err) throw err;
+                            });
+                            
+                        }
+
+                        if(isLeaf) {
+                            // insert edge connecting nodes sharing the same keyword
+
+
+                            // TODO: don't add trivial keywords like digital
+
+
+                            InvertedIndex.findOneAndUpdate({keyword:value}, {$push: {vertex_ids: nodeID}},{upsert:true}, function(err, doc){
+                                
+
+                                if(doc) {
+                                    //console.log(doc['keyword']);
+
+                                    // for(i in doc['vertex_ids']) {
+                                    //     //console.log(doc['vertex_ids'][i]);
+
+                                    //     connection.query('INSERT INTO edge SET ?', 
+                                    //     {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
+                                    //     function(err, result){
+                                    //         //TODO
+                                    //         if(err) throw err;
+                                    //     });
+                                    // }
+                                }
+
+                                
+                            });
+
+
+                            // var query = InvertedIndex.findOneAndUpdate({keyword:value}, {$push: {vertex_ids: nodeID}},{upsert:true}).exec();
+                            // query.then(function(err, doc) {
+                            //     if(err) throw err;
+                            //     if(doc) {
+                            //         //console.log(doc['keyword']);
+
+                            //         for(i in doc['vertex_ids']) {
+                            //             //console.log(doc['vertex_ids'][i]);
+
+                            //             connection.query('INSERT INTO edge SET ?', 
+                            //             {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
+                            //             function(err, result){
+                            //                 //TODO
+                            //                 if(err) throw err;
+                            //             });
+                            //         }
+                            //     }
+                            // });
+                            // mongooseQueries.push(query);
+
+
+                            // InvertedIndex.findOne({keyword:value}, function(err, doc) {
+                            //     if(err) throw err;
+
+                            //     //console.log(doc);
+                            //     if(doc) {
+                                    
+                            //         for(i in doc['vertex_ids']) {
+                            //             //console.log(doc['vertex_ids'][i]);
+
+                            //             connection.query('INSERT INTO edge SET ?', 
+                            //             {'vertex_id_1': nodeID, 'vertex_id_2': doc['vertex_ids'][i]},
+                            //             function(err, result){
+                            //                 //TODO
+                            //                 if(err) throw err;
+                            //             });
+                            //         }
+                            //     }
+                                
+                            //     InvertedIndex.update({keyword: value}, {$push: {vertex_ids: nodeID}}, {upsert: true}).exec();
+
+                            // });
+
+
+
+
+
+                                // findNodeIDWithKeyword(db, isLeaf, function(nodeIDs){
+                                //     updateInvertedIndex(db, isLeaf, function(){});
+                                // });
+                                
+                        }
+                    
+                    
                     
                     
                 }, null);
@@ -354,12 +421,22 @@ module.exports = {
             //     });
             //     //connection.end();
             // });
-            
+
+
+            // for(var j = 0; j < mongooseQueries.length-1; j++) {
+            //     mongooseQueries[j].then(function(){mongooseQueries[j+1].exec()});
+            // }
+
+
+            // Promise.all(mongooseQueries).then(function(){
+            //     console.log('all query done');
+            // });
             
         };
         
         
         
+        // TODO
         this.deleteFile = function (filename, file_id) {
             // Select from vertex where file = filename (id?)
             // and delete these records
