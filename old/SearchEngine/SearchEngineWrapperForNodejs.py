@@ -19,9 +19,9 @@ nodeList = []
 for index in [1, 2]:
     nodeList.append(argv[index].split(','))
 
-# paths = []
-# paths.append(nodeList[0])
-# paths.append(nodeList[1])
+paths = []
+paths.append(nodeList[0])
+paths.append(nodeList[1])
 
 # call SearchEngine
 searchEngine = SearchEngine()
@@ -29,5 +29,5 @@ paths = searchEngine.SearchPath(nodeList[0], nodeList[1])
 searchEngine.DisconnectDatabase()
 
 # print result as JSON, received by node.js script
-print json.dumps(paths, ensure_ascii = False)
+print json.dumps(paths, ensure_ascii = False).encode('utf8')
 # print paths

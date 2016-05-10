@@ -39,3 +39,7 @@ jspm_packages
 # Mac os .DS_Store file
 .DS_Store
 
+.pyc
+
+#tmp download file
+tmp
