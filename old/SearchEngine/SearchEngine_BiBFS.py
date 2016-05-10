@@ -24,7 +24,7 @@ class SearchEngine:
         #                          '12345678',
         #                          'datalake550')
         #call("cis550", shell=True , env=dict(ENV='~/.bash_profile'))
-        self.db = MySQLdb.connect(self.MYSQL_HOST, self.MYSQL_USER, self.MYSQL_PASSWORD, self.MYSQL_DB)
+        self.db = MySQLdb.connect(self.MYSQL_HOST, self.MYSQL_USER, self.MYSQL_PASSWORD, self.MYSQL_DB, charset='utf8')
 
         self.cursor = self.db.cursor()
 
@@ -225,6 +225,8 @@ class SearchEngine:
         nodeInQueueMap1 = {}
         nodeInQueueMap2 = {}
 
+        pathUniqueHash = set()
+
         # initialize first search
         for id in self.nodeIDs_1:
             hashNode1.add(id)
@@ -245,7 +247,7 @@ class SearchEngine:
             # expand search_1
             expansionList1 = self.GetExpansionList(queue1[head1]["vertex_id"])
             for newID in expansionList1:
-                if newID in hashNode2: # found pass throuhg 1->2
+                if newID in hashNode2 and newID not in hashNode1: # found pass throuhg 1->2
                     resultPath = []
 
                     tmp = head1
@@ -260,7 +262,10 @@ class SearchEngine:
                         resultPath.append(self.CreatePathNode(queue2[tmp]))
                         tmp = queue2[tmp]["prev"]
 
-                    resultPaths.append(resultPath)
+                    if resultPath[0]["vertex_id"] not in pathUniqueHash:
+                        pathUniqueHash.add(resultPath[0]["vertex_id"])
+                        resultPaths.append(resultPath)
+
                     if self.OPT_MAX_PASS_NUMBER == True and len(resultPaths) >= self.MAX_PASS_NUMBER:
                         return resultPaths
 
@@ -275,7 +280,7 @@ class SearchEngine:
             # expand search_2
             expansionList2 = self.GetExpansionList(queue2[head2]["vertex_id"])
             for newID in expansionList2:
-                if newID in hashNode1: # found pass throuhg 2->1
+                if newID in hashNode1 and newID not in hashNode2: # found pass throuhg 2->1
                     resultPath = []
 
                     tmp = nodeInQueueMap1[newID]
@@ -290,7 +295,10 @@ class SearchEngine:
                         resultPath.append(self.CreatePathNode(queue2[tmp]))
                         tmp = queue2[tmp]["prev"]
 
-                    resultPaths.append(resultPath)
+                    if resultPath[0]["vertex_id"] not in pathUniqueHash:
+                        pathUniqueHash.add(resultPath[0]["vertex_id"])
+                        resultPaths.append(resultPath)
+
                     if self.OPT_MAX_PASS_NUMBER == True and len(resultPaths) >= self.MAX_PASS_NUMBER:
                         return resultPaths
 
