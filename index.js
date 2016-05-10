@@ -142,17 +142,6 @@ createRawMySQLConnection();
 
 app.get('/', (req, res) => {
   res.render('index', { title: 'CIS550 Datalake', message: 'Welcome to CIS550 Datalake'});
-
-  // // for s3: url, bucket, fileKey, fileID
-  // console.log('add local file test');
-  // extractor.initConnection(connection);
-  // //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
-  // extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
-
-  // console.log('query from mongo test');
-  // var linker = new linkerModule.Linker();
-    
-  // linker.searchQuery(['2013-08-09','2-4'], function(result){console.log(result)});
 });
 
 
@@ -211,15 +200,20 @@ app.post('/file', upload.single('file'), (req, res, next) => {
     console.log(doc);
 
     // for s3: url, bucket, fileKey, fileID
-    //console.log('add local file test');
-    //extractor.initConnection(connection);
-    //extractor.addFile('./old/test-data/de.1.clubs.json', null, null, 'file-1');
+    console.log('extract');
+    extractor.initConnection(connection);
+    extractor.addFile('./tmp/'+req.file.location, AWS_S3_BUCKET, req.file.location, 'file-1');
     //extractor.addFile('./old/test-data/1-bundesliga.csv', null, null, 'file-2');
   });
 });
 
 app.post('/search', (req, res) => {
   console.log('search');
+
+
+  var linker = new linkerModule.Linker();
+    
+  linker.searchQuery(['2013-08-09','2-4'], function(result){console.log(result)});
 });
 
 MySQL.sequelize.sync().then(() => {

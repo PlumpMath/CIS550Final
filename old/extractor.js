@@ -99,12 +99,12 @@ module.exports = {
         
         var extractJsonFromFile = function (url, bucket, fileKey, onload) {
 
-            // // download the file from S3
-            // var s3 = new AWS.S3();
+            // download the file from S3
+            var s3 = new AWS.S3();
             
-            // var params = {Bucket: bucket, Key: fileKey};
-            // var file = fs.createWriteStream(url);
-            // s3.getObject(params).createReadStream.pipe(file);
+            var params = {Bucket: bucket, Key: fileKey};
+            var file = fs.createWriteStream(url);
+            s3.getObject(params).createReadStream.pipe(file);
             
             
             // extract the file content to json
